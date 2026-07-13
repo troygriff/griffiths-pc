@@ -341,11 +341,22 @@
   }
   .concept-switcher .cs-go:hover{ background:#54D69B; transform:translateY(-1px); }
   @media (max-width:760px){
+    /* Still one row, same as desktop — just the whole bar scrolls
+       horizontally instead of wrapping. Wrapping onto multiple lines turned
+       the pill (border-radius:999px) into a lopsided stadium shape with
+       clipped text; a single scrollable strip keeps the same shape at any
+       width and nothing gets cut off, just swiped to. */
     .concept-switcher{
       left:0.75rem; right:0.75rem; bottom:0.75rem; transform:none;
-      flex-wrap:wrap; justify-content:center; padding:0.6rem;
+      width:calc(100vw - 1.5rem); max-width:none; box-sizing:border-box;
+      flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
     }
-    .concept-switcher .cs-label{ width:100%; text-align:center; margin:0 0 0.3rem; }
+    .concept-switcher::-webkit-scrollbar{ display:none; }
+    .concept-switcher .cs-label,
+    .concept-switcher .cs-options,
+    .concept-switcher button.cs-opt,
+    .concept-switcher .cs-go{ flex:none; }
   }
 </style>
 
@@ -753,13 +764,18 @@
      because the browser sees a real href, not a script-only action.
 
      A relative "../index.html" only resolves when this file is actually
-     sitting next to the real homepage — on disk, or once deployed. Each
-     published Claude artifact is hosted at its own isolated URL with no such
-     sibling file, so viewed there a relative link 404s. Detect that case
-     (any http/https origin that isn't file:) and point at the published
-     homepage artifact's real URL instead. Swap HOMEPAGE_ARTIFACT_URL below if
-     that artifact gets republished at a different address. */
+     sitting next to the real homepage — on disk, once deployed (e.g. GitHub
+     Pages), or anywhere else this repo actually lives. Only a published
+     Claude artifact lacks that sibling file, since each one is hosted at its
+     own isolated URL. The correct signal for "am I in that situation" is NOT
+     "is this not file:" (a real deployed https: site isn't file: either, and
+     was wrongly matching that branch) — it's "am I embedded in an iframe",
+     which is how the claude.ai artifact viewer actually renders this page.
+     Swap HOMEPAGE_ARTIFACT_URL below if that artifact gets republished at a
+     different address. */
   var HOMEPAGE_ARTIFACT_URL = 'https://claude.ai/code/artifact/89669195-980f-4187-b5ab-5adcc4ebe45c';
+  var embedded = false;
+  try { embedded = window.self !== window.top; } catch(e){ embedded = true; }
   var goBtn = document.getElementById('csGo');
 
   function render(){
@@ -768,7 +784,7 @@
       btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
     });
     if (goBtn){
-      var base = (location.protocol === 'file:') ? '../index.html' : HOMEPAGE_ARTIFACT_URL;
+      var base = embedded ? HOMEPAGE_ARTIFACT_URL : '../index.html';
       goBtn.href = base + '#concept=' + encodeURIComponent(selected);
     }
   }

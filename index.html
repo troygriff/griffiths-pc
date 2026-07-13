@@ -389,11 +389,22 @@
   }
   .concept-switcher .cs-branding:hover{ background:#54D69B; transform:translateY(-1px); }
   @media (max-width:760px){
+    /* Still one row, same as desktop — just the whole bar scrolls
+       horizontally instead of wrapping. Wrapping onto multiple lines turned
+       the pill (border-radius:999px) into a lopsided stadium shape with
+       clipped text; a single scrollable strip keeps the same shape at any
+       width and nothing gets cut off, just swiped to. */
     .concept-switcher{
       left:0.75rem; right:0.75rem; bottom:0.75rem; transform:none;
-      flex-wrap:wrap; justify-content:center; padding:0.6rem;
+      width:calc(100vw - 1.5rem); max-width:none; box-sizing:border-box;
+      flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
     }
-    .concept-switcher .cs-label{ width:100%; text-align:center; margin:0 0 0.3rem; }
+    .concept-switcher::-webkit-scrollbar{ display:none; }
+    .concept-switcher .cs-label,
+    .concept-switcher .cs-options,
+    .concept-switcher button.cs-opt,
+    .concept-switcher .cs-branding{ flex:none; }
   }
 </style>
 
