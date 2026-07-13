@@ -1,5 +1,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Griffiths, PC — Energy Law &amp; Infrastructure Development</title>
+<script>
+/* Runs before the stylesheet paints, so a #concept= link from the /branding
+   switcher lands on the right theme with no flash of the default site. Absent
+   it, this is a no-op — the production site is untouched, no nav, exactly as
+   designed. A hash, not a query string: some static-file hosting (including
+   published Claude artifacts) strips unknown query params before serving the
+   page, but a hash is resolved entirely client-side and never touches the
+   network. Arriving with ANY valid #concept= (including explicitly
+   "halftone") flags concept-preview mode, which is what reveals the floating
+   switcher — a plain production visit never sees it.
+
+   Second signal, independent of the hash: a published Claude artifact is
+   rendered inside a sandboxed iframe, and that iframe's own location is
+   disconnected from the outer browser address bar — a #concept= link from
+   another artifact never reaches this page's script at all, hash or no hash.
+   There's no way to fix that from here, so instead: detect "am I embedded in
+   something" (true for the artifact viewer, false for a real top-level
+   production visit) and treat that alone as enough to reveal the switcher —
+   the specific concept can't be pre-selected in that case, but the switcher
+   is at least reachable so you can pick one by hand. */
+(function(){
+  var valid = ['halftone','blueprint','topograph','ledger','aurora'];
+  var m = /concept=([a-z]+)/.exec(location.hash);
+  var c = m ? m[1] : null;
+  var embedded = false;
+  try { embedded = window.self !== window.top; } catch(e){ embedded = true; }
+  if (valid.indexOf(c) !== -1){
+    if (c !== 'halftone') document.documentElement.setAttribute('data-concept', c);
+    document.documentElement.setAttribute('data-concept-preview', 'true');
+  } else if (embedded){
+    document.documentElement.setAttribute('data-concept-preview', 'true');
+  }
+})();
+</script>
 <style>
   :root{
     --ink:#14181B;
@@ -24,6 +58,40 @@
     --rule: var(--line);
     --brand: var(--accent);
     --brand-ink: var(--accent-ink);
+
+    --hero-bg:#ECEEE6;
+    --radius-pill:999px;
+  }
+
+  /* ---------- concept overrides ----------
+     Mirrors the same 5 concepts documented and switchable on /branding —
+     this is what "Go" on that page's concept switcher actually previews.
+     Reached only via #concept=, so the default site is untouched. */
+  :root[data-concept="blueprint"]{
+    --ink:#0E2A1F; --ink-soft:#3C5048;
+    --paper:#EEF3EF; --paper-deep:#E1EAE4; --line:#B7C6BC;
+    --accent:#0F3D2A; --accent-ink:#092018;
+    --font-display: var(--font-mono);
+    --hero-bg:#E1EAE4; --radius-pill:4px;
+  }
+  :root[data-concept="topograph"]{
+    --ink:#2B2620; --ink-soft:#6B6255;
+    --paper:#F3EDE3; --paper-deep:#EAE2D4; --line:#D8CCB8;
+    --accent:#24593F; --accent-ink:#173A29;
+    --hero-bg:#EAE2D4; --radius-pill:999px;
+  }
+  :root[data-concept="ledger"]{
+    --ink:#1A1611; --ink-soft:#5C5346;
+    --paper:#F6F1E6; --paper-deep:#EDE5D2; --line:#CFC3A8;
+    --accent:#12251C; --accent-ink:#0A150F;
+    --hero-bg:#EDE5D2; --radius-pill:2px;
+  }
+  :root[data-concept="aurora"]{
+    --ink:#EAF2EC; --ink-soft:#9FB3A8;
+    --paper:#0C1613; --paper-deep:#0F1D18; --line:#28372F;
+    --accent:#49CE93; --accent-ink:#081310;
+    --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif;
+    --hero-bg:#0F1D18; --radius-pill:999px;
   }
 
   /* This site commits to a single light register — no dark-mode variant. */
@@ -140,15 +208,15 @@
     min-height:clamp(620px, calc(100vh - 4.25rem), 920px);
     display:flex; align-items:center;
     overflow:hidden;
-    background:#ECEEE6;
+    background:var(--hero-bg);
     isolation:isolate;
   }
   .hero canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
   .hero-scrim{
     position:absolute; inset:0; z-index:1;
     background:
-      radial-gradient(ellipse 64% 62% at 24% 50%, rgba(236,238,230,0.72), rgba(236,238,230,0) 70%),
-      linear-gradient(180deg, rgba(236,238,230,0.35) 0%, rgba(236,238,230,0.15) 30%, rgba(236,238,230,0.15) 70%, rgba(236,238,230,0.5) 100%);
+      radial-gradient(ellipse 64% 62% at 24% 50%, color-mix(in srgb, var(--hero-bg) 72%, transparent), transparent 70%),
+      linear-gradient(180deg, color-mix(in srgb, var(--hero-bg) 35%, transparent) 0%, color-mix(in srgb, var(--hero-bg) 15%, transparent) 30%, color-mix(in srgb, var(--hero-bg) 15%, transparent) 70%, color-mix(in srgb, var(--hero-bg) 50%, transparent) 100%);
     pointer-events:none;
   }
   .hero-inner{
@@ -162,31 +230,31 @@
   .hero-cta-row a{ pointer-events:auto; }
   .hero-tag{
     font-family:var(--font-mono); font-size:clamp(0.78rem, 1.25vw, 0.92rem); letter-spacing:0.16em; text-transform:uppercase;
-    color:#1C5439; margin-bottom:1.25rem;
+    color:var(--accent); margin-bottom:1.25rem;
   }
   .hero h1{
     font-size:clamp(2.75rem, 8vw, 6rem); line-height:0.98; letter-spacing:-0.02em;
-    max-width:14ch; color:#14181B;
+    max-width:14ch; color:var(--ink);
   }
   .hero-lede{
-    margin-top:1.6rem; max-width:none; white-space:nowrap; font-size:1.15rem; color:rgba(20,24,27,0.68);
+    margin-top:1.6rem; max-width:none; white-space:nowrap; font-size:1.15rem; color:color-mix(in srgb, var(--ink) 68%, transparent);
   }
   @media (max-width:760px){ .hero-lede{ white-space:normal; } }
   .hero-cta-row{ display:flex; align-items:center; gap:clamp(1.25rem,3vw,2rem); flex-wrap:wrap; margin-top:2.25rem; }
   .pill-btn{
     display:inline-flex; align-items:center; justify-content:center;
-    background:#14181B; color:#ECEEE6;
+    background:var(--ink); color:var(--hero-bg);
     font-family:var(--font-mono); font-size:0.8rem; letter-spacing:0.09em; text-transform:uppercase;
-    padding:0.95rem 1.85rem; border-radius:999px;
+    padding:0.95rem 1.85rem; border-radius:var(--radius-pill);
     transition:background .2s ease, transform .2s ease;
   }
-  .pill-btn:hover{ background:#1C5439; transform:translateY(-1px); }
+  .pill-btn:hover{ background:var(--accent); transform:translateY(-1px); }
   .text-link-light{
     font-family:var(--font-mono); font-size:0.78rem; letter-spacing:0.09em; text-transform:uppercase;
-    color:rgba(20,24,27,0.7); border-bottom:1px solid rgba(20,24,27,0.32); padding-bottom:0.3rem;
+    color:color-mix(in srgb, var(--ink) 70%, transparent); border-bottom:1px solid color-mix(in srgb, var(--ink) 32%, transparent); padding-bottom:0.3rem;
     transition:color .2s ease, border-color .2s ease;
   }
-  .text-link-light:hover{ color:#1C5439; border-color:#1C5439; }
+  .text-link-light:hover{ color:var(--accent); border-color:var(--accent); }
 
   /* ---------- generic section ---------- */
   section{ padding-block:clamp(4rem, 9vw, 7rem); border-bottom:1px solid var(--rule); }
@@ -277,6 +345,56 @@
   }
   .footer-grid a:hover{ color:var(--brand); }
   .footer-brand{ font-family:var(--font-display); font-size:1rem; color:var(--fg); margin-bottom:0.4rem; }
+
+  /* ---------- concept switcher ----------
+     Mirrors /branding's floating switcher, but lives on the page itself
+     rather than depending on that page passing state here — see the note by
+     window.switchConcept in the script below for why. Fixed page chrome,
+     deliberately not themed by the active concept so it reads the same
+     regardless of what's underneath.
+
+     Hidden unless data-concept-preview is set (i.e. arrived via a #concept=
+     link from /branding) — a plain production visit is untouched, no nav,
+     exactly as designed. */
+  .concept-switcher{ display:none; }
+  :root[data-concept-preview="true"] .concept-switcher{
+    position:fixed; left:50%; bottom:1.5rem; transform:translateX(-50%); z-index:500;
+    display:flex; align-items:center; gap:0.35rem;
+    background:rgba(18,21,19,0.92); backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:999px; padding:0.4rem 0.9rem;
+    box-shadow:0 16px 40px -12px rgba(0,0,0,0.55);
+    font-family:ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .concept-switcher .cs-label{
+    font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.45);
+    margin-right:0.35rem; white-space:nowrap;
+  }
+  .concept-switcher .cs-options{ display:flex; gap:0.2rem; }
+  .concept-switcher button.cs-opt{
+    appearance:none; border:1px solid transparent; background:none; cursor:pointer;
+    font-family:inherit; font-size:0.68rem; letter-spacing:0.03em; color:rgba(255,255,255,0.62);
+    padding:0.4rem 0.65rem; border-radius:999px; transition:background .15s ease, color .15s ease;
+    white-space:nowrap;
+  }
+  .concept-switcher button.cs-opt:hover{ color:#fff; background:rgba(255,255,255,0.08); }
+  .concept-switcher button.cs-opt[aria-pressed="true"]{
+    color:#0E1512; background:#54D69B; font-weight:600;
+  }
+  .concept-switcher .cs-branding{
+    display:inline-block; appearance:none; border:none; cursor:pointer; margin-left:0.4rem;
+    font-family:inherit; font-size:0.68rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    color:#0E1512; background:#fff; padding:0.4rem 0.75rem; border-radius:999px;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .concept-switcher .cs-branding:hover{ background:#54D69B; transform:translateY(-1px); }
+  @media (max-width:760px){
+    .concept-switcher{
+      left:0.75rem; right:0.75rem; bottom:0.75rem; transform:none;
+      flex-wrap:wrap; justify-content:center; padding:0.6rem;
+    }
+    .concept-switcher .cs-label{ width:100%; text-align:center; margin:0 0 0.3rem; }
+  }
 </style>
 
 <a class="skip-link" href="#main">Skip to content</a>
@@ -498,10 +616,54 @@
   </div>
 </footer>
 
+<nav class="concept-switcher" aria-label="Brand concept switcher">
+  <span class="cs-label">Concept</span>
+  <div class="cs-options" id="csOptions">
+    <button type="button" class="cs-opt" data-concept="halftone">01 Halftone</button>
+    <button type="button" class="cs-opt" data-concept="blueprint">02 Blueprint</button>
+    <button type="button" class="cs-opt" data-concept="topograph">03 Topograph</button>
+    <button type="button" class="cs-opt" data-concept="ledger">04 Ledger</button>
+    <button type="button" class="cs-opt" data-concept="aurora">05 Aurora</button>
+  </div>
+  <a href="branding/" class="cs-branding" id="csBranding" target="_blank" rel="noopener">Branding</a>
+</nav>
+
 <script>
 (function(){
-  var canvas = document.getElementById('ditherCanvas');
-  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* Same reasoning as Go on /branding: a real href, not a JS-only action, so
+     right-click → copy link / open in new tab still works even where a
+     programmatic navigation would get blocked. Relative path resolves once
+     this file is actually deployed or run locally; on a published Claude
+     artifact (isolated URL, no real sibling /branding) it falls back to the
+     branding artifact's real address. */
+  var BRANDING_ARTIFACT_URL = 'https://claude.ai/code/artifact/4e55ac35-3746-450c-8898-14897a4e41a0';
+  var brandingLink = document.getElementById('csBranding');
+  if (brandingLink && location.protocol !== 'file:' && (window.self !== window.top)){
+    brandingLink.href = BRANDING_ARTIFACT_URL;
+  }
+
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('.cs-opt'));
+  var selected = document.documentElement.getAttribute('data-concept') || 'halftone';
+  function render(){
+    buttons.forEach(function(btn){
+      btn.setAttribute('aria-pressed', btn.getAttribute('data-concept') === selected ? 'true' : 'false');
+    });
+  }
+  render();
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var name = btn.getAttribute('data-concept');
+      if (name === selected) return;
+      selected = name;
+      render();
+      if (window.switchConcept) window.switchConcept(name);
+    });
+  });
+})();
+</script>
+
+<script>
+(function(){
   var BAYER = [
     [0,32,8,40,2,34,10,42],[48,16,56,24,50,18,58,26],
     [12,44,4,36,14,46,6,38],[60,28,52,20,62,30,54,22],
@@ -510,7 +672,7 @@
   ];
 
   /* Canvas2D fallback for browsers without WebGL: a static ordered-dither field. */
-  function fallback2D(){
+  function fallback2D(canvas){
     var ctx = canvas.getContext('2d');
     function draw(){
       var rect = canvas.getBoundingClientRect();
@@ -538,9 +700,240 @@
     new ResizeObserver(draw).observe(canvas);
   }
 
+  /* ---------- concept preview ----------
+     Reached only via #concept= (set in <head> before paint). Halftone keeps
+     its real WebGL two-pass hero below untouched; every other concept swaps
+     in the matching pattern from /branding instead. Ported verbatim from
+     that page's PATTERNS registry so the two never drift out of sync. */
+  var concept = document.documentElement.getAttribute('data-concept') || 'halftone';
+
+  function renderGridPattern(canvas, opts){
+    var ctx = canvas.getContext('2d');
+    function draw(){
+      var rect = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = Math.max(1, Math.round(rect.width * dpr));
+      var h = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = w; canvas.height = h;
+      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      ctx.fillStyle = opts.bg; ctx.fillRect(0, 0, w, h);
+      var minor = Math.max(6, w / (opts.density || 90));
+      var majorEvery = 6;
+      var col = 0;
+      for (var x = 0; x <= w; x += minor, col++){
+        ctx.strokeStyle = (col % majorEvery === 0) ? opts.line : opts.lineFaint;
+        ctx.lineWidth = (col % majorEvery === 0) ? 1.1 : 0.6;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      var row = 0;
+      for (var y = 0; y <= h; y += minor, row++){
+        ctx.strokeStyle = (row % majorEvery === 0) ? opts.line : opts.lineFaint;
+        ctx.lineWidth = (row % majorEvery === 0) ? 1.1 : 0.6;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+      ctx.strokeStyle = opts.tick; ctx.lineWidth = 1.4;
+      var majorStep = minor * majorEvery;
+      for (var ty = majorStep; ty < h; ty += majorStep){
+        for (var tx = majorStep; tx < w; tx += majorStep){
+          if (((tx / majorStep) + (ty / majorStep)) % 3 !== 0) continue;
+          ctx.beginPath(); ctx.moveTo(tx - 6, ty); ctx.lineTo(tx + 6, ty); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(tx, ty - 6); ctx.lineTo(tx, ty + 6); ctx.stroke();
+        }
+      }
+    }
+    draw();
+    new ResizeObserver(draw).observe(canvas);
+  }
+
+  function renderContourPattern(canvas, opts){
+    var ctx = canvas.getContext('2d');
+    var peaks = opts.peaks || [{ x:0.22, y:0.32 }, { x:0.82, y:0.68 }];
+    function draw(){
+      var rect = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = Math.max(1, Math.round(rect.width * dpr));
+      var h = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = w; canvas.height = h;
+      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      ctx.fillStyle = opts.bg; ctx.fillRect(0, 0, w, h);
+      var spacing = Math.max(14, w / (opts.density || 40));
+      var maxR = Math.max(w, h) * 0.85;
+      peaks.forEach(function(peak, pi){
+        var cx = peak.x * w, cy = peak.y * h;
+        var ringIndex = 0;
+        for (var r = spacing; r < maxR; r += spacing, ringIndex++){
+          ctx.beginPath();
+          var steps = 90;
+          for (var s = 0; s <= steps; s++){
+            var a = (s / steps) * Math.PI * 2;
+            var wobble = Math.sin(a * 3 + pi + ringIndex * 0.4) * spacing * 0.18
+                       + Math.sin(a * 7 + ringIndex) * spacing * 0.07;
+            var rr = r + wobble;
+            var px = cx + Math.cos(a) * rr, py = cy + Math.sin(a) * rr * 0.82;
+            if (s === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          var fade = Math.max(0, 1 - r / maxR);
+          ctx.strokeStyle = opts.line; ctx.globalAlpha = 0.55 * fade + 0.06;
+          ctx.lineWidth = ringIndex % 4 === 0 ? 1.3 : 0.7;
+          ctx.stroke();
+        }
+      });
+      ctx.globalAlpha = 1;
+    }
+    draw();
+    new ResizeObserver(draw).observe(canvas);
+  }
+
+  function renderGrainPattern(canvas, opts){
+    var ctx = canvas.getContext('2d');
+    function hexToRgb(hex){
+      var n = parseInt(hex.replace('#', ''), 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+    function draw(){
+      var rect = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = Math.max(1, Math.round(rect.width * dpr));
+      var h = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = w; canvas.height = h;
+      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      ctx.fillStyle = opts.bg; ctx.fillRect(0, 0, w, h);
+
+      var dotRGB = hexToRgb(opts.dot);
+      var density = opts.density || 0.4;
+      var strength = opts.strength || 0.4;
+      var img = ctx.getImageData(0, 0, w, h);
+      var data = img.data;
+      for (var p = 0; p < data.length; p += 4){
+        if (Math.random() > density) continue;
+        var amt = Math.random() * strength;
+        data[p]   += (dotRGB[0] - data[p])   * amt;
+        data[p+1] += (dotRGB[1] - data[p+1]) * amt;
+        data[p+2] += (dotRGB[2] - data[p+2]) * amt;
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+    draw();
+    new ResizeObserver(draw).observe(canvas);
+  }
+
+  function renderGradientShader(canvas, opts){
+    function fallback(){
+      var ctx = canvas.getContext('2d');
+      var rect = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = Math.max(1, Math.round(rect.width * dpr));
+      var h = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = w; canvas.height = h;
+      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      ctx.fillStyle = opts.colorA; ctx.fillRect(0, 0, w, h);
+      var g1 = ctx.createRadialGradient(w * 0.25, h * 0.35, 0, w * 0.25, h * 0.35, Math.max(w, h) * 0.7);
+      g1.addColorStop(0, opts.colorC); g1.addColorStop(1, 'transparent');
+      ctx.fillStyle = g1; ctx.globalAlpha = 0.7; ctx.fillRect(0, 0, w, h);
+      var g2 = ctx.createRadialGradient(w * 0.75, h * 0.65, 0, w * 0.75, h * 0.65, Math.max(w, h) * 0.6);
+      g2.addColorStop(0, opts.colorB); g2.addColorStop(1, 'transparent');
+      ctx.fillStyle = g2; ctx.globalAlpha = 0.8; ctx.fillRect(0, 0, w, h);
+      ctx.globalAlpha = 1;
+    }
+    var glc = canvas.getContext('webgl', { alpha:false, antialias:true })
+          || canvas.getContext('experimental-webgl', { alpha:false });
+    if (!glc){ fallback(); return; }
+    var vertSrc2 = 'attribute vec2 position;\nvoid main(){ gl_Position = vec4(position, 0.0, 1.0); }';
+    var fragSrc2 =
+      'precision highp float;\n' +
+      'uniform vec2 resolution; uniform float time;\n' +
+      'uniform vec3 colorA; uniform vec3 colorB; uniform vec3 colorC;\n' +
+      'float field(vec2 p, float t){\n' +
+      '  p += 0.26 * vec2(cos(p.y * 1.3 - t * 0.4), sin(p.x * 1.3 + t * 0.35));\n' +
+      '  float w1 = cos(dot(p, vec2(0.85, 0.40)) * 1.7 + t * 0.8);\n' +
+      '  float w2 = cos(dot(p, vec2(-0.48, 0.85)) * 2.1 - t * 0.6);\n' +
+      '  float w3 = cos(dot(p, vec2(0.24, -0.97)) * 1.5 + t * 0.45);\n' +
+      '  float w4 = cos(dot(p, vec2(0.60, 0.60)) * 2.4 + t * 0.35);\n' +
+      '  return (w1 + w2 + w3 + w4) / 4.0;\n' +
+      '}\n' +
+      'void main(){\n' +
+      '  vec2 uv = (gl_FragCoord.xy / resolution) * 2.0 - 1.0;\n' +
+      '  uv.x *= resolution.x / resolution.y;\n' +
+      '  float t = time * 0.05;\n' +
+      '  float v = field(uv, t);\n' +
+      '  float v2 = field(uv * 1.25 + 9.0, t * 1.15);\n' +
+      '  vec3 col = mix(colorA, colorB, smoothstep(-0.9, 0.9, v));\n' +
+      '  col = mix(col, colorC, smoothstep(-0.2, 0.9, v2) * 0.5);\n' +
+      '  gl_FragColor = vec4(col, 1.0);\n' +
+      '}';
+    function compile2(type, src){
+      var sh = glc.createShader(type);
+      glc.shaderSource(sh, src); glc.compileShader(sh);
+      if (!glc.getShaderParameter(sh, glc.COMPILE_STATUS)){ glc.deleteShader(sh); return null; }
+      return sh;
+    }
+    var vert2 = compile2(glc.VERTEX_SHADER, vertSrc2);
+    var frag2 = compile2(glc.FRAGMENT_SHADER, fragSrc2);
+    if (!vert2 || !frag2){ fallback(); return; }
+    var prog0 = glc.createProgram();
+    glc.attachShader(prog0, vert2); glc.attachShader(prog0, frag2); glc.linkProgram(prog0);
+    if (!glc.getProgramParameter(prog0, glc.LINK_STATUS)){ fallback(); return; }
+    glc.useProgram(prog0);
+    var buf0 = glc.createBuffer();
+    glc.bindBuffer(glc.ARRAY_BUFFER, buf0);
+    glc.bufferData(glc.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), glc.STATIC_DRAW);
+    var posLoc0 = glc.getAttribLocation(prog0, 'position');
+    glc.enableVertexAttribArray(posLoc0);
+    glc.vertexAttribPointer(posLoc0, 2, glc.FLOAT, false, 0, 0);
+    function hexToVec3(hex){
+      var n = parseInt(hex.replace('#', ''), 16);
+      return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+    }
+    var uRes0 = glc.getUniformLocation(prog0, 'resolution');
+    var uTime0 = glc.getUniformLocation(prog0, 'time');
+    var uA0 = glc.getUniformLocation(prog0, 'colorA');
+    var uB0 = glc.getUniformLocation(prog0, 'colorB');
+    var uC0 = glc.getUniformLocation(prog0, 'colorC');
+    var cA0 = hexToVec3(opts.colorA), cB0 = hexToVec3(opts.colorB), cC0 = hexToVec3(opts.colorC);
+    function drawFrame0(time){
+      var rect = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = Math.max(1, Math.round(rect.width * dpr));
+      var h = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = w; canvas.height = h;
+      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      glc.viewport(0, 0, w, h);
+      glc.uniform2f(uRes0, w, h);
+      glc.uniform1f(uTime0, time);
+      glc.uniform3fv(uA0, cA0); glc.uniform3fv(uB0, cB0); glc.uniform3fv(uC0, cC0);
+      glc.drawArrays(glc.TRIANGLES, 0, 3);
+    }
+    var time0 = 0;
+    drawFrame0(time0);
+    new ResizeObserver(function(){ drawFrame0(time0); }).observe(canvas);
+    if (opts.animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      (function loop0(){
+        if (!document.body.contains(canvas)) return;
+        time0 += 0.6;
+        drawFrame0(time0);
+        requestAnimationFrame(loop0);
+      })();
+    }
+  }
+
+  var CONCEPT_PATTERNS = {
+    blueprint:  { fn: renderGridPattern,    opts: { bg:'#E1EAE4', line:'rgba(15,61,42,0.45)', lineFaint:'rgba(15,61,42,0.14)', tick:'rgba(15,61,42,0.6)', density:70 } },
+    topograph:  { fn: renderContourPattern, opts: { bg:'#EAE2D4', line:'rgba(36,89,63,0.8)', density:34 } },
+    ledger:     { fn: renderGrainPattern,   opts: { bg:'#EDE5D2', dot:'#12251C' } },
+    aurora:     { fn: renderGradientShader, opts: { colorA:'#0F1D18', colorB:'#123524', colorC:'#49CE93', animate:true } }
+  };
+
+  function initHero(canvas, concept){
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (concept !== 'halftone' && CONCEPT_PATTERNS[concept]){
+    CONCEPT_PATTERNS[concept].fn(canvas, CONCEPT_PATTERNS[concept].opts);
+    return;
+  }
+
   var gl = canvas.getContext('webgl', { alpha:true, premultipliedAlpha:false, antialias:false, preserveDrawingBuffer:false })
         || canvas.getContext('experimental-webgl', { alpha:true, premultipliedAlpha:false });
-  if (!gl){ fallback2D(); return; }
+  if (!gl){ fallback2D(canvas); return; }
 
   var vertSrc =
     'attribute vec2 position;\n' +
@@ -619,7 +1012,7 @@
 
   var prog1 = makeProgram(vertSrc, pass1Frag);
   var prog2 = makeProgram(vertSrc, pass2Frag);
-  if (!prog1 || !prog2){ fallback2D(); return; }
+  if (!prog1 || !prog2){ fallback2D(canvas); return; }
 
   var quad = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, quad);
@@ -685,6 +1078,7 @@
 
   var start = null;
   function frame(now){
+      if (!document.body.contains(canvas)) return;
     if (start === null) start = now;
     ensureSize();
     var t = (now - start) / 1000;
@@ -722,6 +1116,26 @@
   ensureSize();
   requestAnimationFrame(frame);
   new ResizeObserver(function(){ if (reduceMotion) requestAnimationFrame(frame); }).observe(canvas);
+  }
+
+  var concept = document.documentElement.getAttribute('data-concept') || 'halftone';
+  initHero(document.getElementById('ditherCanvas'), concept);
+
+  /* Same live, in-place re-skin pattern as /branding — a concept switcher
+     lives directly on this page too, since URL-based state (query string or
+     hash) can't reliably reach a page loaded inside another artifact's
+     sandboxed iframe. This page doesn't depend on receiving state from
+     anywhere else. */
+  window.switchConcept = function(name){
+    if (name === concept) return;
+    if (name !== 'halftone' && !CONCEPT_PATTERNS[name]) return;
+    concept = name;
+    document.documentElement.setAttribute('data-concept', name);
+    var old = document.getElementById('ditherCanvas');
+    var fresh = old.cloneNode(false);
+    old.replaceWith(fresh);
+    initHero(fresh, name);
+  };
 })();
 
 (function(){

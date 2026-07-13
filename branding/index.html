@@ -1,5 +1,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Griffiths, PC — Brand Guidelines</title>
+<script>
+/* Runs synchronously before the stylesheet paints, so the right :root[data-concept]
+   block is already active on first frame — no flash of the default (Halftone) theme
+   while a #concept=blueprint link is loading. A hash, not a query string: some
+   static-file hosting (including published Claude artifacts) strips unknown
+   query params before serving the page, but a hash is resolved entirely
+   client-side and never touches the network, so nothing can strip it. */
+(function(){
+  var valid = ['halftone','blueprint','topograph','ledger','aurora'];
+  var m = /concept=([a-z]+)/.exec(location.hash);
+  var c = m ? m[1] : null;
+  if (valid.indexOf(c) !== -1) document.documentElement.setAttribute('data-concept', c);
+})();
+</script>
 <style>
   :root{
     --ink:#14181B;
@@ -16,6 +30,54 @@
     --font-display: ui-serif, "New York", "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
     --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
     --font-mono: ui-monospace, "SF Mono", Menlo, "Cascadia Code", "Roboto Mono", monospace;
+
+    --radius-sm:8px;
+    --radius-md:10px;
+    --radius-lg:12px;
+    --radius-pill:999px;
+    --space-section:clamp(3.5rem,8vw,6rem);
+    --pattern-bg:var(--paper-deep);
+  }
+
+  /* ---------- concept overrides ----------
+     Each concept redefines the same token set above — components consume the
+     tokens, never a raw hex/px value, so switching data-concept re-skins the
+     whole page (color, type, radius, spacing) without touching markup. */
+  :root[data-concept="blueprint"]{
+    --ink:#0E2A1F; --ink-soft:#3C5048;
+    --paper:#EEF3EF; --paper-deep:#E1EAE4; --line:#B7C6BC;
+    --accent:#0F3D2A; --accent-ink:#092018; --dither-tint:#2C6B4C;
+    --font-display: var(--font-mono);
+    --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+    --radius-sm:2px; --radius-md:3px; --radius-lg:4px; --radius-pill:4px;
+    --space-section:clamp(2.5rem,5.5vw,4rem);
+    --pattern-bg:var(--paper-deep);
+  }
+  :root[data-concept="topograph"]{
+    --ink:#2B2620; --ink-soft:#6B6255;
+    --paper:#F3EDE3; --paper-deep:#EAE2D4; --line:#D8CCB8;
+    --accent:#24593F; --accent-ink:#173A29; --dither-tint:#3C8161;
+    --radius-sm:14px; --radius-md:18px; --radius-lg:22px; --radius-pill:999px;
+    --space-section:clamp(4.5rem,10vw,7.5rem);
+    --pattern-bg:var(--paper-deep);
+  }
+  :root[data-concept="ledger"]{
+    --ink:#1A1611; --ink-soft:#5C5346;
+    --paper:#F6F1E6; --paper-deep:#EDE5D2; --line:#CFC3A8;
+    --accent:#12251C; --accent-ink:#0A150F; --dither-tint:#12251C;
+    --radius-sm:0px; --radius-md:2px; --radius-lg:2px; --radius-pill:2px;
+    --space-section:clamp(3rem,6vw,4.5rem);
+    --pattern-bg:var(--paper-deep);
+  }
+  :root[data-concept="aurora"]{
+    --ink:#EAF2EC; --ink-soft:#9FB3A8;
+    --paper:#0C1613; --paper-deep:#0F1D18; --line:#28372F;
+    --accent:#49CE93; --accent-ink:#081310; --dither-tint:#7BE8B8;
+    --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif;
+    --radius-sm:14px; --radius-md:20px; --radius-lg:26px; --radius-pill:999px;
+    --space-section:clamp(5rem,11vw,8rem);
+    --pattern-bg:var(--paper-deep);
+    --grad-a:#0C1613; --grad-b:#123524; --grad-c:#49CE93;
   }
   *{ box-sizing:border-box; }
   html{ scroll-behavior:smooth; }
@@ -70,7 +132,7 @@
   .intro p{ margin-top:1.25rem; max-width:56ch; font-size:1.1rem; color:var(--ink-soft); }
 
   /* ---------- sections ---------- */
-  section.block{ padding-block:clamp(3.5rem,8vw,6rem); border-bottom:1px solid var(--line); }
+  section.block{ padding-block:var(--space-section); border-bottom:1px solid var(--line); }
   section.block:last-of-type{ border-bottom:none; }
   .section-head{ max-width:52ch; margin-bottom:clamp(2.25rem,5vw,3.25rem); }
   .section-head h2{ font-size:clamp(1.9rem,4vw,2.6rem); }
@@ -81,12 +143,29 @@
   .logo-mark text{ fill:var(--paper); }
   .logo-mark.on-dark circle{ fill:var(--paper); }
   .logo-mark.on-dark text{ fill:var(--accent-ink); }
+  /* Aurora's page is dark-on-dark by design, so --accent-ink and --paper sit
+     too close in lightness for the usual pairing to read — every mark (both
+     variants) uses the bright accent instead, the one color guaranteed to
+     pop off this concept's near-black surfaces. */
+  :root[data-concept="aurora"] .logo-mark circle,
+  :root[data-concept="aurora"] .logo-mark.on-dark circle{ fill:var(--accent); }
+  :root[data-concept="aurora"] .logo-mark text,
+  :root[data-concept="aurora"] .logo-mark.on-dark text{ fill:var(--accent-ink); }
+  :root[data-concept="aurora"] .biz-card .card-top .wordmark{ color:var(--accent); }
+  /* Aurora's card-back shader has broad smooth-bright regions (unlike the other
+     concepts' sparse dot/line patterns), so plain light text can land on a
+     bright patch and vanish. A soft dark shadow keeps it legible regardless of
+     where the gradient happens to be at render time. */
+  :root[data-concept="aurora"] .biz-card.back .back-content .wordmark-lg{
+    color:var(--ink);
+    text-shadow:0 2px 16px rgba(0,0,0,0.65), 0 1px 4px rgba(0,0,0,0.85);
+  }
 
   /* ---------- logo section ---------- */
   .logo-grid{ display:flex; flex-wrap:wrap; gap:clamp(2rem,5vw,3rem); align-items:flex-end; margin-bottom:clamp(2.5rem,5vw,3.5rem); }
   .logo-swatch{ display:flex; flex-direction:column; align-items:center; gap:0.85rem; }
   .logo-swatch .cap{ font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); }
-  .logo-dark-bg{ background:var(--accent-ink); border-radius:12px; padding:clamp(2rem,5vw,3rem); display:flex; justify-content:center; margin-bottom:clamp(2.5rem,5vw,3.5rem); }
+  .logo-dark-bg{ background:var(--accent-ink); border-radius:var(--radius-lg); padding:clamp(2rem,5vw,3rem); display:flex; justify-content:center; margin-bottom:clamp(2.5rem,5vw,3.5rem); }
   .logo-rules{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.5rem; }
   .logo-rule h3{ font-size:0.95rem; margin-bottom:0.5rem; font-family:var(--font-body); font-weight:700; }
   .logo-rule p{ font-size:0.9rem; color:var(--ink-soft); margin:0; }
@@ -94,7 +173,7 @@
   /* ---------- color section ---------- */
   .swatch-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); }
   .swatch{ background:var(--paper); padding:1.5rem; }
-  .swatch-block{ height:5rem; border-radius:8px; border:1px solid var(--line); margin-bottom:1rem; }
+  .swatch-block{ height:5rem; border-radius:var(--radius-sm); border:1px solid var(--line); margin-bottom:1rem; }
   .swatch h3{ font-size:0.95rem; font-family:var(--font-body); font-weight:700; margin-bottom:0.2rem; }
   .swatch .hex{ font-family:var(--font-mono); font-size:0.8rem; color:var(--ink-soft); }
   .swatch .usage{ font-size:0.84rem; color:var(--ink-soft); margin-top:0.6rem; }
@@ -111,7 +190,7 @@
   .font-stack-item b{ display:block; font-family:var(--font-body); font-size:0.95rem; color:var(--ink); margin-bottom:0.3rem; font-weight:700; }
 
   /* ---------- dithering section ---------- */
-  .dither-demo{ position:relative; border-radius:12px; overflow:hidden; aspect-ratio:16/7; background:var(--paper-deep); margin-bottom:clamp(2rem,5vw,3rem); }
+  .dither-demo{ position:relative; border-radius:var(--radius-lg); overflow:hidden; aspect-ratio:16/7; background:var(--pattern-bg); margin-bottom:clamp(2rem,5vw,3rem); }
   .dither-demo canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
   .dither-notes{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1.5rem; }
   .dither-notes h3{ font-size:0.95rem; margin-bottom:0.5rem; font-family:var(--font-body); font-weight:700; }
@@ -125,7 +204,7 @@
   .imagery-item{ position:relative; }
   .imagery-item img{
     width:100%; aspect-ratio:4/3; object-fit:cover;
-    border-radius:8px; border:1px solid var(--line); display:block;
+    border-radius:var(--radius-sm); border:1px solid var(--line); display:block;
   }
   .imagery-cap{
     margin-top:0.55rem; font-family:var(--font-mono); font-size:0.68rem;
@@ -141,7 +220,7 @@
   .app-label{ font-family:var(--font-mono); font-size:0.78rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:1.25rem; }
 
   .card-row{ display:flex; flex-wrap:wrap; gap:clamp(1.5rem,4vw,2.5rem); }
-  .biz-card{ width:min(340px,100%); aspect-ratio:1050/600; border-radius:10px; border:1px solid var(--line); background:var(--paper); padding:clamp(1.25rem,3vw,1.75rem); display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 12px 30px -20px rgba(20,24,27,0.35); }
+  .biz-card{ width:min(340px,100%); aspect-ratio:1050/600; border-radius:var(--radius-md); border:1px solid var(--line); background:var(--paper); padding:clamp(1.25rem,3vw,1.75rem); display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 12px 30px -20px rgba(20,24,27,0.35); }
   .biz-card .card-top{ display:flex; align-items:center; gap:0.7rem; }
   .biz-card .card-top .wordmark{ font-family:var(--font-display); font-size:1rem; font-weight:600; color:var(--accent-ink); letter-spacing:0.01em; }
   .biz-card .card-name{ font-family:var(--font-body); font-weight:700; font-size:1.05rem; }
@@ -159,7 +238,11 @@
      sits right-aligned since the avatar occupies the bottom-left corner. */
   .banner-scrim{
     position:absolute; inset:0; z-index:1;
-    background:linear-gradient(270deg, rgba(247,246,242,0.92) 0%, rgba(247,246,242,0.75) 45%, rgba(247,246,242,0.15) 78%, rgba(247,246,242,0) 100%);
+    background:linear-gradient(270deg,
+      color-mix(in srgb, var(--pattern-bg) 92%, transparent) 0%,
+      color-mix(in srgb, var(--pattern-bg) 75%, transparent) 45%,
+      color-mix(in srgb, var(--pattern-bg) 15%, transparent) 78%,
+      transparent 100%);
   }
   .banner-content{
     position:absolute; inset:0; z-index:2; display:flex; flex-direction:column;
@@ -177,7 +260,7 @@
     width:100%; border:1px solid #d0d0d0; border-radius:12px; overflow:hidden;
     background:#fff; box-shadow:0 12px 30px -20px rgba(20,24,27,0.35);
   }
-  .li-mock-banner{ width:100%; position:relative; background:#F7F6F2; container-type:inline-size; overflow:hidden; }
+  .li-mock-banner{ width:100%; position:relative; background:var(--pattern-bg); container-type:inline-size; overflow:hidden; }
   .li-mock-banner canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
   .li-mock-body{ position:relative; padding:0 1.5rem 1.5rem; }
   .li-mock-avatar{
@@ -218,6 +301,52 @@
   /* ---------- footer ---------- */
   .site-footer{ padding-block:clamp(2rem,5vw,3rem); text-align:center; }
   .site-footer p{ font-family:var(--font-mono); font-size:0.76rem; color:var(--ink-soft); }
+
+  /* ---------- concept switcher ----------
+     Fixed page chrome, deliberately NOT themed by the active concept (fixed
+     dark pill regardless of data-concept) so it reads the same and stays
+     legible whether the page underneath is Ledger's cream or Signal's near-
+     black. Picking a concept just highlights it; Go is the only thing that
+     navigates, to a real #concept= URL for each. */
+  .concept-switcher{
+    position:fixed; left:50%; bottom:1.5rem; transform:translateX(-50%); z-index:500;
+    display:flex; align-items:center; gap:0.35rem;
+    background:rgba(18,21,19,0.92); backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:999px; padding:0.4rem 0.4rem 0.4rem 0.9rem;
+    box-shadow:0 16px 40px -12px rgba(0,0,0,0.55);
+    font-family:ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .concept-switcher .cs-label{
+    font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.45);
+    margin-right:0.35rem; white-space:nowrap;
+  }
+  .concept-switcher .cs-options{ display:flex; gap:0.2rem; }
+  .concept-switcher button.cs-opt{
+    appearance:none; border:1px solid transparent; background:none; cursor:pointer;
+    font-family:inherit; font-size:0.68rem; letter-spacing:0.03em; color:rgba(255,255,255,0.62);
+    padding:0.4rem 0.65rem; border-radius:999px; transition:background .15s ease, color .15s ease;
+    white-space:nowrap;
+  }
+  .concept-switcher button.cs-opt:hover{ color:#fff; background:rgba(255,255,255,0.08); }
+  .concept-switcher button.cs-opt[aria-pressed="true"]{
+    color:#0E1512; background:#54D69B; font-weight:600;
+  }
+  .concept-switcher button.cs-opt[data-live="true"]::after{ content:" ·"; opacity:0.6; }
+  .concept-switcher .cs-go{
+    display:inline-block; appearance:none; border:none; cursor:pointer; margin-left:0.15rem;
+    font-family:inherit; font-size:0.7rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    color:#0E1512; background:#fff; padding:0.55rem 1.1rem; border-radius:999px;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .concept-switcher .cs-go:hover{ background:#54D69B; transform:translateY(-1px); }
+  @media (max-width:760px){
+    .concept-switcher{
+      left:0.75rem; right:0.75rem; bottom:0.75rem; transform:none;
+      flex-wrap:wrap; justify-content:center; padding:0.6rem;
+    }
+    .concept-switcher .cs-label{ width:100%; text-align:center; margin:0 0 0.3rem; }
+  }
 </style>
 
 <header class="site-header">
@@ -415,9 +544,9 @@
 <section class="block" id="dither">
   <div class="container">
     <div class="section-head">
-      <div class="eyebrow">Dithering</div>
-      <h2>The Halftone Effect</h2>
-      <p class="lede">An 8&times;8 ordered (Bayer) dither over a smoothly-warping cosine wave field, rendered in two WebGL passes and colored in the Dither Tint. It's the site's one generative flourish &mdash; reserved for hero moments, not scattered as decoration.</p>
+      <div class="eyebrow" id="patternEyebrow">Dithering</div>
+      <h2 id="patternTitle">The Halftone Effect</h2>
+      <p class="lede" id="patternLede">An 8&times;8 ordered (Bayer) dither over a smoothly-warping cosine wave field, rendered in two WebGL passes and colored in the Dither Tint. It's the site's one generative flourish &mdash; reserved for hero moments, not scattered as decoration.</p>
     </div>
 
     <div class="dither-demo">
@@ -426,20 +555,20 @@
 
     <div class="dither-notes">
       <div>
-        <h3>Where it's used</h3>
-        <p>The homepage hero background only. It commits to a fixed light register regardless of the rest of the page.</p>
+        <h3 id="pn1t">Where it&rsquo;s used</h3>
+        <p id="pn1b">The homepage hero background only. It commits to a fixed light register regardless of the rest of the page.</p>
       </div>
       <div>
-        <h3>How it's built</h3>
-        <p>Pass 1 renders a slow cosine-wave interference field to an offscreen texture. Pass 2 samples it through a Bayer 8&times;8 threshold to produce small round dots &mdash; not filled squares.</p>
+        <h3 id="pn2t">How it&rsquo;s built</h3>
+        <p id="pn2b">Pass 1 renders a slow cosine-wave interference field to an offscreen texture. Pass 2 samples it through a Bayer 8&times;8 threshold to produce small round dots &mdash; not filled squares.</p>
       </div>
       <div>
-        <h3>Interaction</h3>
-        <p>The pattern clears in a soft radius around the cursor. Move your mouse over the demo above.</p>
+        <h3 id="pn3t">Interaction</h3>
+        <p id="pn3b">The pattern clears in a soft radius around the cursor. Move your mouse over the demo above.</p>
       </div>
       <div>
-        <h3>Reuse rules</h3>
-        <p>Reserve for one hero moment per page. For print/static assets (business cards, banners), bake a single static frame rather than animating.</p>
+        <h3 id="pn4t">Reuse rules</h3>
+        <p id="pn4b">Reserve for one hero moment per page. For print/static assets (business cards, banners), bake a single static frame rather than animating.</p>
       </div>
     </div>
   </div>
@@ -599,6 +728,67 @@
   </div>
 </footer>
 
+<nav class="concept-switcher" aria-label="Brand concept switcher">
+  <span class="cs-label">Concept</span>
+  <div class="cs-options" id="csOptions">
+    <button type="button" class="cs-opt" data-concept="halftone">01 Halftone</button>
+    <button type="button" class="cs-opt" data-concept="blueprint">02 Blueprint</button>
+    <button type="button" class="cs-opt" data-concept="topograph">03 Topograph</button>
+    <button type="button" class="cs-opt" data-concept="ledger">04 Ledger</button>
+    <button type="button" class="cs-opt" data-concept="aurora">05 Aurora</button>
+  </div>
+  <a href="#" class="cs-go" id="csGo" target="_blank" rel="noopener">Go &rarr;</a>
+</nav>
+
+<script>
+(function(){
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('.cs-opt'));
+  var selected = document.documentElement.getAttribute('data-concept') || 'halftone';
+
+  /* Go is a real <a href target="_blank">, not a JS-driven window.open() —
+     inside a sandboxed Claude artifact iframe, window.open() to another
+     artifact can get silently blocked ("This content is blocked") with no
+     fallback. A genuine link degrades gracefully: even if the click-through
+     is blocked, right-click → copy link / open in new tab still works,
+     because the browser sees a real href, not a script-only action.
+
+     A relative "../index.html" only resolves when this file is actually
+     sitting next to the real homepage — on disk, or once deployed. Each
+     published Claude artifact is hosted at its own isolated URL with no such
+     sibling file, so viewed there a relative link 404s. Detect that case
+     (any http/https origin that isn't file:) and point at the published
+     homepage artifact's real URL instead. Swap HOMEPAGE_ARTIFACT_URL below if
+     that artifact gets republished at a different address. */
+  var HOMEPAGE_ARTIFACT_URL = 'https://claude.ai/code/artifact/89669195-980f-4187-b5ab-5adcc4ebe45c';
+  var goBtn = document.getElementById('csGo');
+
+  function render(){
+    buttons.forEach(function(btn){
+      var isSelected = btn.getAttribute('data-concept') === selected;
+      btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+    });
+    if (goBtn){
+      var base = (location.protocol === 'file:') ? '../index.html' : HOMEPAGE_ARTIFACT_URL;
+      goBtn.href = base + '#concept=' + encodeURIComponent(selected);
+    }
+  }
+  render();
+
+  /* Picking a concept re-skins THIS page immediately, in place — no reload.
+     switchConcept() (defined in the main script below) owns everything that
+     actually needs to change: tokens, patterns, copy. */
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var name = btn.getAttribute('data-concept');
+      if (name === selected) return;
+      selected = name;
+      render();
+      if (window.switchConcept) window.switchConcept(name);
+    });
+  });
+})();
+</script>
+
 <script>
 (function(){
   var BAYER = [
@@ -642,8 +832,341 @@
     new ResizeObserver(draw).observe(canvas);
   }
 
+  /* ---------- concept pattern registry ----------
+     Each of the 4 alternate concepts swaps the dithering for a different
+     generative texture, matched to its mood. Same call shape as
+     renderStaticDither(canvas, opts) so any managed canvas can take any
+     renderer — the registry below just picks which one per concept. */
+
+  /* Blueprint: fine engineering graph-paper grid with occasional tick marks. */
+  function renderGridPattern(canvas, opts){
+    var ctx = canvas.getContext('2d');
+    function draw(){
+      var rect = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = Math.max(1, Math.round(rect.width * dpr));
+      var h = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = w; canvas.height = h;
+      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      ctx.fillStyle = opts.bg; ctx.fillRect(0, 0, w, h);
+
+      var minor = Math.max(6, w / (opts.density || 90));
+      var majorEvery = 6;
+      var col = 0;
+      for (var x = 0; x <= w; x += minor, col++){
+        ctx.strokeStyle = (col % majorEvery === 0) ? opts.line : opts.lineFaint;
+        ctx.lineWidth = (col % majorEvery === 0) ? 1.1 : 0.6;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      var row = 0;
+      for (var y = 0; y <= h; y += minor, row++){
+        ctx.strokeStyle = (row % majorEvery === 0) ? opts.line : opts.lineFaint;
+        ctx.lineWidth = (row % majorEvery === 0) ? 1.1 : 0.6;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+      // sparse tick marks at a subset of major intersections
+      ctx.strokeStyle = opts.tick; ctx.lineWidth = 1.4;
+      var majorStep = minor * majorEvery;
+      for (var ty = majorStep; ty < h; ty += majorStep){
+        for (var tx = majorStep; tx < w; tx += majorStep){
+          if (((tx / majorStep) + (ty / majorStep)) % 3 !== 0) continue;
+          ctx.beginPath(); ctx.moveTo(tx - 6, ty); ctx.lineTo(tx + 6, ty); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(tx, ty - 6); ctx.lineTo(tx, ty + 6); ctx.stroke();
+        }
+      }
+    }
+    draw();
+    new ResizeObserver(draw).observe(canvas);
+  }
+
+  /* Topograph: concentric, gently-wobbled elevation-line rings around a couple
+     of fixed peaks — deliberately not dot-based, for real visual contrast
+     against the halftone technique. */
+  function renderContourPattern(canvas, opts){
+    var ctx = canvas.getContext('2d');
+    var peaks = opts.peaks || [{ x:0.22, y:0.32 }, { x:0.82, y:0.68 }];
+    function draw(){
+      var rect = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = Math.max(1, Math.round(rect.width * dpr));
+      var h = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = w; canvas.height = h;
+      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      ctx.fillStyle = opts.bg; ctx.fillRect(0, 0, w, h);
+
+      var spacing = Math.max(14, w / (opts.density || 40));
+      var maxR = Math.max(w, h) * 0.85;
+      peaks.forEach(function(peak, pi){
+        var cx = peak.x * w, cy = peak.y * h;
+        var ringIndex = 0;
+        for (var r = spacing; r < maxR; r += spacing, ringIndex++){
+          ctx.beginPath();
+          var steps = 90;
+          for (var s = 0; s <= steps; s++){
+            var a = (s / steps) * Math.PI * 2;
+            var wobble = Math.sin(a * 3 + pi + ringIndex * 0.4) * spacing * 0.18
+                       + Math.sin(a * 7 + ringIndex) * spacing * 0.07;
+            var rr = r + wobble;
+            var px = cx + Math.cos(a) * rr, py = cy + Math.sin(a) * rr * 0.82;
+            if (s === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          var fade = Math.max(0, 1 - r / maxR);
+          ctx.strokeStyle = opts.line; ctx.globalAlpha = 0.55 * fade + 0.06;
+          ctx.lineWidth = ringIndex % 4 === 0 ? 1.3 : 0.7;
+          ctx.stroke();
+        }
+      });
+      ctx.globalAlpha = 1;
+    }
+    draw();
+    new ResizeObserver(draw).observe(canvas);
+  }
+
+  /* Ledger: no structural pattern at all — just fine paper-grain noise, since
+     this concept's whole point is restraint (hairline rules do the rest). */
+  /* Real per-pixel grain via ImageData rather than thousands of individual
+     fillRect calls — cheap, and the only way sparse single-pixel dots read as
+     actual film grain instead of vanishing entirely at normal zoom. */
+  function renderGrainPattern(canvas, opts){
+    var ctx = canvas.getContext('2d');
+    function hexToRgb(hex){
+      var n = parseInt(hex.replace('#', ''), 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+    function draw(){
+      var rect = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = Math.max(1, Math.round(rect.width * dpr));
+      var h = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = w; canvas.height = h;
+      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      ctx.fillStyle = opts.bg; ctx.fillRect(0, 0, w, h);
+
+      var dotRGB = hexToRgb(opts.dot);
+      var density = opts.density || 0.4;
+      var strength = opts.strength || 0.4;
+      var img = ctx.getImageData(0, 0, w, h);
+      var data = img.data;
+      for (var p = 0; p < data.length; p += 4){
+        if (Math.random() > density) continue;
+        var amt = Math.random() * strength;
+        data[p]   += (dotRGB[0] - data[p])   * amt;
+        data[p+1] += (dotRGB[1] - data[p+1]) * amt;
+        data[p+2] += (dotRGB[2] - data[p+2]) * amt;
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+    draw();
+    new ResizeObserver(draw).observe(canvas);
+  }
+
+  /* Aurora: a genuine WebGL shader, not a Canvas2D pattern — the same cosine
+     interference field that drives Halftone's live hero, but output as a
+     smooth color blend instead of being thresholded through the Bayer matrix
+     into dots. Same field, opposite treatment: dithered vs. smooth. Falls
+     back to a Canvas2D radial-gradient approximation if WebGL is unavailable. */
+  function renderGradientShader(canvas, opts){
+    function fallback(){
+      var ctx = canvas.getContext('2d');
+      var rect = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = Math.max(1, Math.round(rect.width * dpr));
+      var h = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = w; canvas.height = h;
+      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      ctx.fillStyle = opts.colorA; ctx.fillRect(0, 0, w, h);
+      var g1 = ctx.createRadialGradient(w * 0.25, h * 0.35, 0, w * 0.25, h * 0.35, Math.max(w, h) * 0.7);
+      g1.addColorStop(0, opts.colorC); g1.addColorStop(1, 'transparent');
+      ctx.fillStyle = g1; ctx.globalAlpha = 0.7; ctx.fillRect(0, 0, w, h);
+      var g2 = ctx.createRadialGradient(w * 0.75, h * 0.65, 0, w * 0.75, h * 0.65, Math.max(w, h) * 0.6);
+      g2.addColorStop(0, opts.colorB); g2.addColorStop(1, 'transparent');
+      ctx.fillStyle = g2; ctx.globalAlpha = 0.8; ctx.fillRect(0, 0, w, h);
+      ctx.globalAlpha = 1;
+    }
+
+    var gl = canvas.getContext('webgl', { alpha:false, antialias:true })
+          || canvas.getContext('experimental-webgl', { alpha:false });
+    if (!gl){ fallback(); return; }
+
+    var vertSrc = 'attribute vec2 position;\nvoid main(){ gl_Position = vec4(position, 0.0, 1.0); }';
+    var fragSrc =
+      'precision highp float;\n' +
+      'uniform vec2 resolution; uniform float time;\n' +
+      'uniform vec3 colorA; uniform vec3 colorB; uniform vec3 colorC;\n' +
+      /* Four overlapping low-frequency cosine fields (vs. three, tighter ones,
+         before) for a more organic, less "two circular spotlights" shape, with
+         wide smoothstep ranges so color transitions fade in/out gradually —
+         a defined blob edge was the tight 0.15–1.0 range on the highlight
+         layer; widening it blends it into the base instead of cutting it off. */
+      'float field(vec2 p, float t){\n' +
+      '  p += 0.26 * vec2(cos(p.y * 1.3 - t * 0.4), sin(p.x * 1.3 + t * 0.35));\n' +
+      '  float w1 = cos(dot(p, vec2(0.85, 0.40)) * 1.7 + t * 0.8);\n' +
+      '  float w2 = cos(dot(p, vec2(-0.48, 0.85)) * 2.1 - t * 0.6);\n' +
+      '  float w3 = cos(dot(p, vec2(0.24, -0.97)) * 1.5 + t * 0.45);\n' +
+      '  float w4 = cos(dot(p, vec2(0.60, 0.60)) * 2.4 + t * 0.35);\n' +
+      '  return (w1 + w2 + w3 + w4) / 4.0;\n' +
+      '}\n' +
+      'void main(){\n' +
+      '  vec2 uv = (gl_FragCoord.xy / resolution) * 2.0 - 1.0;\n' +
+      '  uv.x *= resolution.x / resolution.y;\n' +
+      '  float t = time * 0.05;\n' +
+      '  float v = field(uv, t);\n' +
+      '  float v2 = field(uv * 1.25 + 9.0, t * 1.15);\n' +
+      '  vec3 col = mix(colorA, colorB, smoothstep(-0.9, 0.9, v));\n' +
+      '  col = mix(col, colorC, smoothstep(-0.2, 0.9, v2) * 0.5);\n' +
+      '  gl_FragColor = vec4(col, 1.0);\n' +
+      '}';
+
+    function compile(type, src){
+      var sh = gl.createShader(type);
+      gl.shaderSource(sh, src); gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)){ gl.deleteShader(sh); return null; }
+      return sh;
+    }
+    var vert = compile(gl.VERTEX_SHADER, vertSrc);
+    var frag = compile(gl.FRAGMENT_SHADER, fragSrc);
+    if (!vert || !frag){ fallback(); return; }
+    var prog = gl.createProgram();
+    gl.attachShader(prog, vert); gl.attachShader(prog, frag); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)){ fallback(); return; }
+    gl.useProgram(prog);
+
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    var posLoc = gl.getAttribLocation(prog, 'position');
+    gl.enableVertexAttribArray(posLoc);
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+    function hexToVec3(hex){
+      var n = parseInt(hex.replace('#', ''), 16);
+      return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+    }
+    var uRes = gl.getUniformLocation(prog, 'resolution');
+    var uTime = gl.getUniformLocation(prog, 'time');
+    var uA = gl.getUniformLocation(prog, 'colorA');
+    var uB = gl.getUniformLocation(prog, 'colorB');
+    var uC = gl.getUniformLocation(prog, 'colorC');
+    var cA = hexToVec3(opts.colorA), cB = hexToVec3(opts.colorB), cC = hexToVec3(opts.colorC);
+
+    function drawFrame(time){
+      var rect = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = Math.max(1, Math.round(rect.width * dpr));
+      var h = Math.max(1, Math.round(rect.height * dpr));
+      canvas.width = w; canvas.height = h;
+      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      gl.viewport(0, 0, w, h);
+      gl.uniform2f(uRes, w, h);
+      gl.uniform1f(uTime, time);
+      gl.uniform3fv(uA, cA); gl.uniform3fv(uB, cB); gl.uniform3fv(uC, cC);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    var time = opts.time || 0;
+    drawFrame(time);
+    new ResizeObserver(function(){ drawFrame(time); }).observe(canvas);
+    if (opts.animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      (function loop(){
+        if (!document.body.contains(canvas)) return;
+        time += 0.6;
+        drawFrame(time);
+        requestAnimationFrame(loop);
+      })();
+    }
+  }
+
+  var PATTERNS = {
+    halftone:  {
+      fn: renderStaticDither,
+      opts: { bg:'#DBDFD5', dot:'#319162', density:160, dirX:8, dirY:3, freq:6, phase:1.2, contrast:1.8 },
+      dark: { bg:'#123524', dot:'#1C5439', density:70, dirX:8, dirY:3, freq:6, phase:1.4, contrast:1.6 }
+    },
+    blueprint: {
+      fn: renderGridPattern,
+      opts: { bg:'#E1EAE4', line:'rgba(15,61,42,0.45)', lineFaint:'rgba(15,61,42,0.14)', tick:'rgba(15,61,42,0.6)', density:70 },
+      dark: { bg:'#092018', line:'rgba(44,107,76,0.55)', lineFaint:'rgba(44,107,76,0.22)', tick:'rgba(44,107,76,0.75)', density:50 }
+    },
+    topograph: {
+      fn: renderContourPattern,
+      opts: { bg:'#EAE2D4', line:'rgba(36,89,63,0.8)', density:34 },
+      dark: { bg:'#173A29', line:'rgba(60,129,97,0.85)', density:26 }
+    },
+    ledger: {
+      fn: renderGrainPattern,
+      opts: { bg:'#EDE5D2', dot:'#12251C' },
+      dark: { bg:'#0A150F', dot:'#F6F1E6' }
+    },
+    aurora: {
+      fn: renderGradientShader,
+      opts: { colorA:'#0C1613', colorB:'#123524', colorC:'#49CE93', animate:true },
+      dark: { colorA:'#081310', colorB:'#123524', colorC:'#49CE93', animate:false }
+    }
+  };
+
+  var currentConcept = document.documentElement.getAttribute('data-concept') || 'halftone';
+  if (!PATTERNS[currentConcept]) currentConcept = 'halftone';
+
+  var activePattern = PATTERNS[currentConcept];
+
+  /* The "Dithering" section's copy describes the technique in prose — it has
+     to match whichever pattern is actually rendering above it, or the page
+     contradicts itself the moment you're not on Halftone. */
+  var PATTERN_COPY = {
+    halftone: {
+      eyebrow: 'Dithering', title: 'The Halftone Effect',
+      lede: 'An 8×8 ordered (Bayer) dither over a smoothly-warping cosine wave field, rendered in two WebGL passes and colored in the Dither Tint. It’s the site’s one generative flourish — reserved for hero moments, not scattered as decoration.',
+      n1t: 'Where it’s used', n1b: 'The homepage hero background only. It commits to a fixed light register regardless of the rest of the page.',
+      n2t: 'How it’s built', n2b: 'Pass 1 renders a slow cosine-wave interference field to an offscreen texture. Pass 2 samples it through a Bayer 8×8 threshold to produce small round dots — not filled squares.',
+      n3t: 'Interaction', n3b: 'The pattern clears in a soft radius around the cursor. Move your mouse over the demo above.',
+      n4t: 'Reuse rules', n4b: 'Reserve for one hero moment per page. For print/static assets (business cards, banners), bake a single static frame rather than animating.'
+    },
+    blueprint: {
+      eyebrow: 'Pattern', title: 'The Grid Pattern',
+      lede: 'A fine engineering graph-paper grid with tick marks at a subset of major intersections, colored in the darker ink tone. It reads as precise and drafted — apt for an infrastructure-focused practice.',
+      n1t: 'Where it’s used', n1b: 'The homepage hero background, same single-register rule as every other concept here.',
+      n2t: 'How it’s built', n2b: 'A regular hairline grid at a fixed cell size, every 6th line drawn bolder, with sparse tick marks stamped at a subset of the major intersections.',
+      n3t: 'Interaction', n3b: 'Static in this concept — no cursor reactivity. The technique trades interactivity for a more drafted, technical feel.',
+      n4t: 'Reuse rules', n4b: 'Same discipline as Halftone: one hero moment per page, baked to a static frame for print.'
+    },
+    topograph: {
+      eyebrow: 'Pattern', title: 'The Contour Pattern',
+      lede: 'Concentric, gently-wobbled elevation lines around two fixed points — a nod to land and site surveying for infrastructure work — stroked rather than filled, in the mid-tone accent.',
+      n1t: 'Where it’s used', n1b: 'The homepage hero background, same single-register rule as every other concept here.',
+      n2t: 'How it’s built', n2b: 'Rings expand outward from two peak points, each ring’s radius perturbed by a couple of overlaid sine waves so it wobbles rather than reading as a perfect circle.',
+      n3t: 'Interaction', n3b: 'Static — the wobble is fixed per render, not cursor-driven.',
+      n4t: 'Reuse rules', n4b: 'One hero moment per page; bake a static frame for any print use.'
+    },
+    ledger: {
+      eyebrow: 'Pattern', title: 'No Pattern — Grain Only',
+      lede: 'This concept’s whole point is restraint: no generative pattern at all, just fine paper-grain noise — the hairline rules already doing the work everywhere else on the page.',
+      n1t: 'Where it’s used', n1b: 'Anywhere a flat surface needs a little texture instead of dead-flat color — sparingly.',
+      n2t: 'How it’s built', n2b: 'Thousands of single-pixel dots at low, randomized opacity — genuine noise, not a repeating tile.',
+      n3t: 'Interaction', n3b: 'Static. There’s nothing here designed to react to the cursor.',
+      n4t: 'Reuse rules', n4b: 'This is the one concept where not using a pattern is the pattern — don’t add one back in.'
+    },
+    aurora: {
+      eyebrow: 'Shader', title: 'The Gradient Field',
+      lede: 'The same cosine interference field driving Halftone’s dithered dots, run through a real WebGL shader with the dithering step removed — a smooth, slowly-drifting gradient blend instead of a grid of dots. Same math, opposite treatment.',
+      n1t: 'Where it’s used', n1b: 'The homepage hero background, same single-register rule as every other concept here.',
+      n2t: 'How it’s built', n2b: 'A single-pass fragment shader blends three layered cosine fields directly into color — no offscreen texture, no Bayer threshold, no dots. Just smooth interpolation between three tones.',
+      n3t: 'Interaction', n3b: 'Animated here via a slowly advancing time uniform; a single frozen frame is used for card/banner exports, per the site’s own print rule.',
+      n4t: 'Reuse rules', n4b: 'One hero moment per page; bake a static frame for any print use.'
+    }
+  };
+  function applyPatternCopy(concept){
+    var c = PATTERN_COPY[concept];
+    var setText = function(id, text){ var el = document.getElementById(id); if (el) el.textContent = text; };
+    setText('patternEyebrow', c.eyebrow); setText('patternTitle', c.title); setText('patternLede', c.lede);
+    setText('pn1t', c.n1t); setText('pn1b', c.n1b);
+    setText('pn2t', c.n2t); setText('pn2b', c.n2b);
+    setText('pn3t', c.n3t); setText('pn3b', c.n3b);
+    setText('pn4t', c.n4t); setText('pn4b', c.n4b);
+  }
+  applyPatternCopy(currentConcept);
+
   var cardBack = document.getElementById('cardBackCanvas');
-  if (cardBack) renderStaticDither(cardBack, { bg:'#123524', dot:'#1C5439', density:70, dirX:8, dirY:3, freq:6, phase:1.4, contrast:1.6 });
+  if (cardBack) activePattern.fn(cardBack, activePattern.dark);
 
   /* The banner half of the mock has no natural height of its own (no fixed
      aspect-ratio) — it's kept equal to whatever height the text half actually
@@ -655,27 +1178,29 @@
      resizes — the container growing afterward doesn't cascade back down. */
   var liBannerEl = document.querySelector('.li-mock-banner');
   var liBodyEl = document.querySelector('.li-mock-body');
-  if (liBannerEl && liBodyEl){
-    var syncBannerHeight = function(){ liBannerEl.style.height = (liBodyEl.offsetHeight * 0.7) + 'px'; };
-    syncBannerHeight();
-    new ResizeObserver(syncBannerHeight).observe(liBodyEl);
-  }
+  function syncBannerHeight(){ if (liBannerEl && liBodyEl) liBannerEl.style.height = (liBodyEl.offsetHeight * 0.7) + 'px'; }
+  syncBannerHeight();
+  if (liBodyEl) new ResizeObserver(syncBannerHeight).observe(liBodyEl);
 
   var banner = document.getElementById('bannerCanvas');
-  if (banner) renderStaticDither(banner, { bg:'#F7F6F2', dot:'rgba(49,145,98,0.6)', density:170, dirX:7, dirY:2.2, freq:4.2, phase:0.6, contrast:2.8 });
+  if (banner) activePattern.fn(banner, Object.assign({}, activePattern.opts, { animate:false }));
 
-  /* Live animated demo — the actual two-pass WebGL technique from the homepage hero,
-     at a smaller scale, so this page demonstrates the real effect rather than a description of it. */
-  var demoCanvas = document.getElementById('ditherDemoCanvas');
-  if (!demoCanvas) return;
+  /* Live animated demo. Halftone gets the actual two-pass WebGL technique from
+     the homepage hero (at a smaller scale); every other concept previews its
+     own pattern function directly — Aurora runs its own single-pass WebGL
+     shader, and Blueprint/Topograph/Ledger's Canvas2D patterns are a perfectly
+     honest demo of what those assets actually export as. */
+  function initDemoCanvas(canvas, concept){
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function fallback2D(){
-    renderStaticDither(demoCanvas, { bg:'#DBDFD5', dot:'#319162', density:160, dirX:8, dirY:3, freq:6, phase:1.2, contrast:1.8 });
+    PATTERNS[concept].fn(canvas, PATTERNS[concept].opts);
   }
 
-  var gl = demoCanvas.getContext('webgl', { alpha:true, premultipliedAlpha:false, antialias:false })
-        || demoCanvas.getContext('experimental-webgl', { alpha:true, premultipliedAlpha:false });
+  if (concept !== 'halftone'){ fallback2D(); return; }
+
+  var gl = canvas.getContext('webgl', { alpha:true, premultipliedAlpha:false, antialias:false })
+        || canvas.getContext('experimental-webgl', { alpha:true, premultipliedAlpha:false });
   if (!gl){ fallback2D(); return; }
 
   var vertSrc = 'attribute vec2 position;\nvarying vec2 vUv;\nvoid main(){ vUv = position * 0.5 + 0.5; gl_Position = vec4(position, 0.0, 1.0); }';
@@ -764,12 +1289,12 @@
   var tex = null, fbo = null, cw = 0, ch = 0;
 
   function ensureSize(){
-    var rect = demoCanvas.getBoundingClientRect();
+    var rect = canvas.getBoundingClientRect();
     var w = Math.max(1, Math.floor(rect.width * dpr)), h = Math.max(1, Math.floor(rect.height * dpr));
     if (w === cw && h === ch) return;
     cw = w; ch = h;
-    demoCanvas.width = w; demoCanvas.height = h;
-    demoCanvas.style.width = rect.width + 'px'; demoCanvas.style.height = rect.height + 'px';
+    canvas.width = w; canvas.height = h;
+    canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
     if (tex) gl.deleteTexture(tex);
     if (fbo) gl.deleteFramebuffer(fbo);
     tex = gl.createTexture();
@@ -786,11 +1311,11 @@
   }
 
   var mouse = [-9999, -9999];
-  demoCanvas.addEventListener('mousemove', function(e){
-    var r = demoCanvas.getBoundingClientRect();
+  canvas.addEventListener('mousemove', function(e){
+    var r = canvas.getBoundingClientRect();
     mouse = [(e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr];
   });
-  demoCanvas.addEventListener('mouseleave', function(){ mouse = [-9999, -9999]; });
+  canvas.addEventListener('mouseleave', function(){ mouse = [-9999, -9999]; });
 
   var waveColor = [0.192, 0.569, 0.384];
 
@@ -803,6 +1328,7 @@
 
   var start = null;
   function frame(now){
+    if (!document.body.contains(canvas)) return;
     if (start === null) start = now;
     ensureSize();
     var t = (now - start) / 1000;
@@ -839,6 +1365,31 @@
 
   ensureSize();
   requestAnimationFrame(frame);
-  new ResizeObserver(function(){ if (reduceMotion) requestAnimationFrame(frame); }).observe(demoCanvas);
+  new ResizeObserver(function(){ if (reduceMotion) requestAnimationFrame(frame); }).observe(canvas);
+  }
+
+  initDemoCanvas(document.getElementById('ditherDemoCanvas'), currentConcept);
+
+  /* Live, in-place re-skin of this page — picking a concept in the floating
+     nav calls this directly (no navigation). "Go" is the only thing that
+     ever leaves the page, and it targets the real site, not this one. */
+  window.switchConcept = function(name){
+    if (!PATTERNS[name] || name === currentConcept) return;
+    currentConcept = name;
+    activePattern = PATTERNS[name];
+    document.documentElement.setAttribute('data-concept', name);
+
+    applyPatternCopy(name);
+    if (cardBack) activePattern.fn(cardBack, activePattern.dark);
+    if (banner) activePattern.fn(banner, Object.assign({}, activePattern.opts, { animate:false }));
+    syncBannerHeight();
+
+    var oldDemo = document.getElementById('ditherDemoCanvas');
+    if (oldDemo){
+      var freshDemo = oldDemo.cloneNode(false);
+      oldDemo.replaceWith(freshDemo);
+      initDemoCanvas(freshDemo, name);
+    }
+  };
 })();
 </script>
