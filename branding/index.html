@@ -278,6 +278,48 @@
   .banner-download-btn:hover{ background:var(--accent); transform:translateY(-1px); }
   .banner-download-btn:active{ transform:translateY(0); }
 
+  .banner-export-actions{ display:flex; align-items:center; gap:0.75rem; flex:none; }
+  .banner-scale-group{
+    display:flex; gap:0.15rem; padding:0.2rem; border:1px solid var(--line); border-radius:var(--radius-pill);
+  }
+  .banner-scale-opt{
+    appearance:none; border:none; cursor:pointer; background:none;
+    font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.02em;
+    color:var(--ink-soft); padding:0.45rem 0.75rem; border-radius:var(--radius-pill);
+    transition:background .15s ease, color .15s ease;
+  }
+  .banner-scale-opt:hover{ color:var(--ink); }
+  .banner-scale-opt[aria-pressed="true"]{ background:var(--accent-ink); color:var(--paper); font-weight:600; }
+
+  /* ---------- LinkedIn company logo (square) ----------
+     LinkedIn's small square company icon — shown next to a job title, always
+     tiny, always on a light UI. Kept a fixed dark accent-ink background across
+     all four variants (not concept-swappable to paper) since that's what
+     gives the mark contrast at the size it's actually displayed. */
+  .li-logo-scale-row{ display:flex; align-items:center; gap:0.75rem; margin-bottom:1.5rem; }
+  .li-logo-scale-label{ font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); }
+  .li-logo-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:clamp(1.5rem,3vw,2rem); }
+  .li-logo-item{ display:flex; flex-direction:column; }
+  .li-logo-square{
+    width:100%; aspect-ratio:1; border-radius:var(--radius-md); overflow:hidden;
+    border:1px solid var(--line); box-shadow:0 12px 30px -20px rgba(20,24,27,0.35);
+    background:#123524;
+  }
+  .li-logo-square canvas{ width:100%; height:100%; display:block; }
+  .li-logo-item-footer{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:0.75rem;
+    margin-top:0.85rem;
+  }
+  .li-logo-name{ font-family:var(--font-body); font-weight:700; font-size:0.92rem; color:var(--ink); }
+  .li-logo-desc{ font-family:var(--font-mono); font-size:0.7rem; color:var(--ink-soft); margin-top:0.25rem; line-height:1.4; }
+  .li-logo-download{
+    flex:none; appearance:none; border:1px solid var(--line); cursor:pointer; background:none;
+    font-family:var(--font-mono); font-size:0.68rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    color:var(--ink); padding:0.5rem 0.85rem; border-radius:var(--radius-pill);
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .li-logo-download:hover{ background:var(--accent-ink); color:var(--paper); border-color:var(--accent-ink); }
+
   /* Assembled at real LinkedIn profile-header proportions — banner + overlapping
      avatar + name/headline in LinkedIn's own UI type — so the pairing can be
      judged honestly rather than guessing from a flat banner rectangle alone.
@@ -713,8 +755,15 @@
         </div>
       </div>
       <div class="banner-export-row">
-        <p class="banner-caption">Exports fresh at exactly 1584&times;396px &mdash; full resolution, never pixelated, regardless of your screen.</p>
-        <button type="button" class="banner-download-btn" id="downloadBannerBtn">Download PNG</button>
+        <p class="banner-caption">1584&times;396 is LinkedIn&rsquo;s exact spec. Export at 1.5x or 2x for extra headroom &mdash; safe against any resizing or high-density display.</p>
+        <div class="banner-export-actions">
+          <div class="banner-scale-group" role="radiogroup" aria-label="Export resolution">
+            <button type="button" class="banner-scale-opt" data-scale="1" aria-pressed="true">1x</button>
+            <button type="button" class="banner-scale-opt" data-scale="1.5" aria-pressed="false">1.5x</button>
+            <button type="button" class="banner-scale-opt" data-scale="2" aria-pressed="false">2x</button>
+          </div>
+          <button type="button" class="banner-download-btn" id="downloadBannerBtn">Download PNG</button>
+        </div>
       </div>
     </div>
 
@@ -737,6 +786,63 @@
             <div class="li-name">Dan Griffiths</div>
             <div class="li-headline">Attorney at Griffiths, PC</div>
             <div class="li-loc">San Francisco, California, United States &middot; <a href="#">Contact info</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-block">
+      <div class="app-label">LinkedIn Company Logo &mdash; Square, 400&times;400</div>
+      <p class="banner-caption" style="margin-bottom:1.5rem;">The small square icon LinkedIn shows next to a job title &mdash; on a profile&rsquo;s experience section, in search results, anywhere the firm is referenced but there&rsquo;s no room for a wordmark. Four takes on blending the halftone technique into the mark itself, all built to stay legible at the tiny size LinkedIn actually displays it.</p>
+
+      <div class="li-logo-scale-row">
+        <span class="li-logo-scale-label">Export size</span>
+        <div class="banner-scale-group li-logo-scale-group" role="radiogroup" aria-label="Logo export resolution">
+          <button type="button" class="banner-scale-opt li-logo-scale-opt" data-scale="1" aria-pressed="true">1x &middot; 400px</button>
+          <button type="button" class="banner-scale-opt li-logo-scale-opt" data-scale="1.5" aria-pressed="false">1.5x &middot; 600px</button>
+          <button type="button" class="banner-scale-opt li-logo-scale-opt" data-scale="2" aria-pressed="false">2x &middot; 800px</button>
+        </div>
+      </div>
+
+      <div class="li-logo-grid">
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogoAmbient" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Ambient Grain</div>
+              <div class="li-logo-desc">Fine texture throughout, g stays flat &amp; solid</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="ambient">Download</button>
+          </div>
+        </div>
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogoClear" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Clearing</div>
+              <div class="li-logo-desc">Dots resolve outward from a clear center</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="clear">Download</button>
+          </div>
+        </div>
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogoHalo" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Halo Ring</div>
+              <div class="li-logo-desc">Dots gather in a ring around the g</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="halo">Download</button>
+          </div>
+        </div>
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogoDotform" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Dot-Formed</div>
+              <div class="li-logo-desc">The g itself is built from the pattern</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="dotform">Download</button>
           </div>
         </div>
       </div>
@@ -1254,8 +1360,22 @@
     var n = parseInt(hex.replace('#', ''), 16);
     return ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255);
   }
+  var bannerScale = 1;
+  var scaleButtons = Array.prototype.slice.call(document.querySelectorAll('.banner-scale-opt'));
+  scaleButtons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      bannerScale = parseFloat(btn.getAttribute('data-scale'));
+      scaleButtons.forEach(function(b){ b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+    });
+  });
+
   function downloadBannerPNG(){
-    var W = 1584, H = 396;
+    /* 1584×396 is LinkedIn's literal spec — the 1.5x/2x options render the
+       exact same design at 2376×594 / 3168×792 (everything below is computed
+       as a fraction of W/H, so it scales cleanly) purely for headroom: extra
+       pixels to survive LinkedIn's own re-encoding or a high-density display,
+       not a different crop or layout. */
+    var W = Math.round(1584 * bannerScale), H = Math.round(396 * bannerScale);
     var patternCanvas = document.createElement('canvas');
     var opts = Object.assign({}, activePattern.opts, { animate:false, exportSize:{ w:W, h:H } });
     activePattern.fn(patternCanvas, opts);
@@ -1304,7 +1424,7 @@
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url;
-      a.download = 'griffiths-pc-linkedin-banner-' + currentConcept + '.png';
+      a.download = 'griffiths-pc-linkedin-banner-' + currentConcept + (bannerScale !== 1 ? '@' + bannerScale + 'x' : '') + '.png';
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -1313,6 +1433,148 @@
   }
   var downloadBtn = document.getElementById('downloadBannerBtn');
   if (downloadBtn) downloadBtn.addEventListener('click', downloadBannerPNG);
+
+  /* ---------- LinkedIn company logo (square) ----------
+     Always uses the halftone dot technique specifically — that's the literal
+     ask ("riff off the halftone effect") — regardless of which concept is
+     active elsewhere on the page; only the colors (bg/dot/glyph) follow the
+     current concept's tokens, so it doesn't look jarringly out of place
+     while previewing e.g. Aurora or Ledger. Static single frame, same
+     reasoning as every other print/download asset on this page. */
+  function drawLogoSquare(canvas, size, mode){
+    var ctx = canvas.getContext('2d');
+    canvas.width = size; canvas.height = size;
+    canvas.style.width = '100%'; canvas.style.height = '100%';
+
+    /* Deliberately fixed, not read from the active concept's CSS tokens —
+       this represents the site's one real, shipped brand, not the concept-
+       comparison experiment, and concept tokens aren't safe here anyway:
+       Aurora's --paper is dark (it's a dark theme), and Ledger's
+       --dither-tint equals its --accent-ink, so either would silently
+       render an invisible glyph or invisible dots depending on concept. */
+    var bgHex = '#123524';
+    var dotHex = '#319162';
+    var glyphHex = '#E7E9E3';
+    var fontDisplay = 'ui-serif, "New York", "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif';
+
+    ctx.fillStyle = bgHex;
+    ctx.fillRect(0, 0, size, size);
+
+    var w = size, h = size, cx = w / 2, cy = h / 2, maxR = w / 2;
+    /* Dot-formed needs a much finer grid than the other three modes — at the
+       same density used for ambient texture (34), the sample grid is too
+       coarse to resolve this serif g's thin bowl strokes and just reads as
+       noise. 70 is fine enough to keep the letterform legible while still
+       looking like discrete dots up close, not a blurred photo. */
+    var density = (mode === 'dotform') ? 70 : 34;
+    var cell = Math.max(2, w / density);
+    var dirX = 8, dirY = 3, freq = 6, phase = 1.3, contrast = 1.7;
+    var dotRgb = hexToRgbCss(dotHex);
+
+    function smoothstep(a, b, x){ var t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+
+    var glyphSize = Math.round(h * 0.62);
+    var maskData = null;
+    if (mode === 'dotform'){
+      var maskCanvas = document.createElement('canvas');
+      maskCanvas.width = w; maskCanvas.height = h;
+      var mctx = maskCanvas.getContext('2d');
+      mctx.fillStyle = '#fff';
+      mctx.font = '600 ' + glyphSize + 'px ' + fontDisplay;
+      mctx.textAlign = 'center';
+      mctx.textBaseline = 'alphabetic';
+      mctx.fillText('g', w / 2, h * 0.655);
+      maskData = mctx.getImageData(0, 0, w, h).data;
+    }
+    function maskAlphaAt(x, y){
+      var xi = Math.max(0, Math.min(w - 1, Math.round(x)));
+      var yi = Math.max(0, Math.min(h - 1, Math.round(y)));
+      return maskData[(yi * w + xi) * 4 + 3] / 255;
+    }
+
+    ctx.fillStyle = 'rgb(' + dotRgb + ')';
+    for (var y = 0; y * cell < h; y++){
+      for (var x = 0; x * cell < w; x++){
+        var px = x * cell + cell / 2, py = y * cell + cell / 2;
+        var nx = px / w - 0.5, ny = py / h - 0.5;
+        var v = 0.5 + 0.5 * Math.cos((nx * dirX + ny * dirY) * freq + phase);
+        v = Math.pow(v, contrast);
+        var threshold = BAYER[y % 8][x % 8] / 64;
+        var radius;
+
+        if (mode === 'dotform'){
+          if (maskAlphaAt(px, py) < 0.45) continue;
+          radius = cell * (0.30 + v * 0.20);
+        } else {
+          var r = Math.hypot(px - cx, py - cy) / maxR;
+          var finalV;
+          if (mode === 'clear'){
+            finalV = v * smoothstep(0.30, 0.62, r);
+          } else if (mode === 'halo'){
+            var ring = 1 - Math.min(1, Math.abs(r - 0.46) / 0.24);
+            finalV = v * Math.max(0, ring);
+          } else {
+            finalV = v;
+          }
+          if (finalV <= threshold) continue;
+          radius = cell * 0.33;
+        }
+
+        ctx.beginPath();
+        ctx.arc(px, py, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Solid flat g on top for ambient/clear/halo — legibility never depends
+    // on the dot layer underneath. Dotform skips this: the dots ARE the g.
+    if (mode !== 'dotform'){
+      ctx.fillStyle = glyphHex;
+      ctx.font = '600 ' + glyphSize + 'px ' + fontDisplay;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('g', w / 2, h * 0.655);
+    }
+  }
+
+  var LI_LOGO_VARIANTS = ['ambient', 'clear', 'halo', 'dotform'];
+  var LI_LOGO_CANVAS_IDS = { ambient:'liLogoAmbient', clear:'liLogoClear', halo:'liLogoHalo', dotform:'liLogoDotform' };
+  function renderAllLogoSquares(){
+    LI_LOGO_VARIANTS.forEach(function(variant){
+      var c = document.getElementById(LI_LOGO_CANVAS_IDS[variant]);
+      if (c) drawLogoSquare(c, 400, variant);
+    });
+  }
+  renderAllLogoSquares();
+
+  var liLogoScale = 1;
+  var liLogoScaleButtons = Array.prototype.slice.call(document.querySelectorAll('.li-logo-scale-opt'));
+  liLogoScaleButtons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      liLogoScale = parseFloat(btn.getAttribute('data-scale'));
+      liLogoScaleButtons.forEach(function(b){ b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+    });
+  });
+
+  var liLogoDownloadButtons = Array.prototype.slice.call(document.querySelectorAll('.li-logo-download'));
+  liLogoDownloadButtons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var variant = btn.getAttribute('data-variant');
+      var size = Math.round(400 * liLogoScale);
+      var out = document.createElement('canvas');
+      drawLogoSquare(out, size, variant);
+      out.toBlob(function(blob){
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'griffiths-pc-linkedin-logo-' + variant + (liLogoScale !== 1 ? '@' + liLogoScale + 'x' : '') + '.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      }, 'image/png');
+    });
+  });
 
   /* Live animated demo. Halftone gets the actual two-pass WebGL technique from
      the homepage hero (at a smaller scale); every other concept previews its
@@ -1513,6 +1775,8 @@
     if (banner) activePattern.fn(banner, Object.assign({}, activePattern.opts, { animate:false }));
     if (bannerExport) activePattern.fn(bannerExport, Object.assign({}, activePattern.opts, { animate:false }));
     syncBannerHeight();
+    // Logo squares intentionally don't re-render here — see the note in
+    // drawLogoSquare on why their colors are fixed, not concept-driven.
 
     var oldDemo = document.getElementById('ditherDemoCanvas');
     if (oldDemo){
