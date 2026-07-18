@@ -1556,17 +1556,6 @@
       var my = Math.max(0, Math.min(h - 1, Math.round(y)));
       return maskData[(my * w + mx) * 4 + 3] / 255;
     }
-    /* Coverage over a small area (not just the exact center) — a thin stroke
-       like the bottom of the g's bowl often misses every cell center and
-       breaks the letter apart into disconnected dots; sampling the cell's
-       footprint catches those strokes so the mark stays connected. */
-    function maskCoverage(x, y, rad){
-      var hits = 0, n = 0, offs = [-rad, 0, rad];
-      for (var i = 0; i < 3; i++){ for (var j = 0; j < 3; j++){
-        n++; if (maskAlphaAt(x + offs[i], y + offs[j]) >= 0.45) hits++;
-      }}
-      return hits / n;
-    }
     function drawGlyph(color){
       ctx.fillStyle = color;
       ctx.font = glyphFont;
@@ -1576,10 +1565,10 @@
     }
 
     // Mask-based modes need a fine grid to resolve the serif g's thin strokes;
-    // the dot-formed ones finest of all so the letterform stays connected.
+    // field-texture modes look better a bit coarser.
     var dotformMode = (mode === 'dotform' || mode === 'dotform-light');
-    var fineModes = { negative:1, 'negative-halftone':1, 'negative-fade':1 };
-    var density = dotformMode ? 88 : (fineModes[mode] ? 72 : 34);
+    var fineModes = { dotform:1, 'dotform-light':1, negative:1, 'negative-halftone':1, 'negative-fade':1 };
+    var density = fineModes[mode] ? 72 : 34;
     var cell = Math.max(2, w / density);
     var dirX = 8, dirY = 3, freq = 6, phase = 1.3, contrast = 1.7;
 
@@ -1599,13 +1588,9 @@
         var color = LOGO_TINT, radius = cell * 0.33, alpha = 1;
 
         if (dotformMode){
-          /* Include any cell whose footprint touches the glyph (not just its
-             center) so thin strokes at the bottom of the bowl still get dots
-             and connect. Bigger base radius (≥ ~half the cell) makes adjacent
-             dots touch, so the letter reads as continuous strokes. */
-          if (maskCoverage(px, py, cell * 0.5) < 0.34) continue;
+          if (!inGlyph) continue;
           color = (mode === 'dotform-light') ? LOGO_PAPER : LOGO_TINT;
-          radius = cell * (0.50 + v * 0.14);
+          radius = cell * (0.30 + v * 0.20);
         } else if (mode === 'negative'){
           /* Dense, uniform field (no cosine threshold) so the g reads as a
              clean empty cut — a thresholded field has its own gaps and the
@@ -1650,6 +1635,39 @@
       }
     }
     ctx.globalAlpha = 1;
+
+    /* Dot-formed only: a few small connector dots that bridge gaps in the
+       letterform — mainly the thin bottom of the bowl — without changing the
+       original dotted look everywhere else. A connector goes at a point
+       between the main dots only where that spot is inside the glyph AND its
+       surrounding main cells are a mix of filled and empty (i.e. a real
+       stroke edge / gap). Solid interior regions (all four filled) are left
+       exactly as they were. */
+    if (dotformMode){
+      ctx.fillStyle = (mode === 'dotform-light') ? LOGO_PAPER : LOGO_TINT;
+      var hc = cell / 2;
+      // Only the lower part of the glyph (the descender bowl) — that's the
+      // one spot that breaks; the rest of the letter is left as the original.
+      var shift = baselineY - probeBaseline;
+      var gTop = minY + shift, gBot = maxY + shift;
+      var lowerY = gTop + 0.55 * (gBot - gTop);
+      for (var cyi = 0; cyi * cell < h; cyi++){
+        for (var cxi = 0; cxi * cell < w; cxi++){
+          var ix = cxi * cell + cell, iy = cyi * cell + cell;
+          if (ix >= w || iy >= h || iy < lowerY) continue;
+          if (maskAlphaAt(ix, iy) < 0.5) continue;
+          var filled = 0;
+          if (maskAlphaAt(ix - hc, iy - hc) >= 0.45) filled++;
+          if (maskAlphaAt(ix + hc, iy - hc) >= 0.45) filled++;
+          if (maskAlphaAt(ix - hc, iy + hc) >= 0.45) filled++;
+          if (maskAlphaAt(ix + hc, iy + hc) >= 0.45) filled++;
+          if (filled === 0 || filled === 4) continue;  // isolated or solid — only bridge edges
+          ctx.beginPath();
+          ctx.arc(ix, iy, cell * 0.26, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
 
     // --- glyphs drawn AFTER the dot layer (sit on top of the dots) ---
     if (mode === 'ambient' || mode === 'clearing' || mode === 'halo') drawGlyph(LOGO_PAPER);
