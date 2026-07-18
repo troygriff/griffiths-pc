@@ -1636,39 +1636,6 @@
     }
     ctx.globalAlpha = 1;
 
-    /* Dot-formed only: a few small connector dots that bridge gaps in the
-       letterform — mainly the thin bottom of the bowl — without changing the
-       original dotted look everywhere else. A connector goes at a point
-       between the main dots only where that spot is inside the glyph AND its
-       surrounding main cells are a mix of filled and empty (i.e. a real
-       stroke edge / gap). Solid interior regions (all four filled) are left
-       exactly as they were. */
-    if (dotformMode){
-      ctx.fillStyle = (mode === 'dotform-light') ? LOGO_PAPER : LOGO_TINT;
-      var hc = cell / 2;
-      // Only the lower part of the glyph (the descender bowl) — that's the
-      // one spot that breaks; the rest of the letter is left as the original.
-      var shift = baselineY - probeBaseline;
-      var gTop = minY + shift, gBot = maxY + shift;
-      var lowerY = gTop + 0.55 * (gBot - gTop);
-      for (var cyi = 0; cyi * cell < h; cyi++){
-        for (var cxi = 0; cxi * cell < w; cxi++){
-          var ix = cxi * cell + cell, iy = cyi * cell + cell;
-          if (ix >= w || iy >= h || iy < lowerY) continue;
-          if (maskAlphaAt(ix, iy) < 0.5) continue;
-          var filled = 0;
-          if (maskAlphaAt(ix - hc, iy - hc) >= 0.45) filled++;
-          if (maskAlphaAt(ix + hc, iy - hc) >= 0.45) filled++;
-          if (maskAlphaAt(ix - hc, iy + hc) >= 0.45) filled++;
-          if (maskAlphaAt(ix + hc, iy + hc) >= 0.45) filled++;
-          if (filled === 0 || filled === 4) continue;  // isolated or solid — only bridge edges
-          ctx.beginPath();
-          ctx.arc(ix, iy, cell * 0.26, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
-
     // --- glyphs drawn AFTER the dot layer (sit on top of the dots) ---
     if (mode === 'ambient' || mode === 'clearing' || mode === 'halo') drawGlyph(LOGO_PAPER);
     if (mode === 'solid') drawGlyph(LOGO_GREEN);
