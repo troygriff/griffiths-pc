@@ -61,9 +61,15 @@ the 1:1 circle.
 ## Dithering
 
 The site's one generative flourish — an 8×8 ordered (Bayer) dither over a
-cosine-wave interference field, rendered in two WebGL passes, colored in the
-Dither Tint (`#319162`). Full technique and a live interactive demo live on
-`/branding#dither`.
+cosine-wave interference field, rendered in a **single** WebGL pass (the field
+is computed directly at each dot's cell center and dithered in one shader),
+colored in the Dither Tint (`#319162`). Full technique and a live interactive
+demo live on `/branding#dither`.
+
+  Do NOT reintroduce an offscreen-framebuffer two-pass version: rendering the
+  field to a non-power-of-two framebuffer texture and sampling it back caused
+  Safari (at certain canvas sizes, on refresh) to sample incorrectly, producing
+  swirl/blur/oversized-circle artifacts. Single-pass avoids this entirely.
 
 - **Where**: homepage hero background only. Don't scatter it as decoration elsewhere.
 - **Motion**: animated + mouse-reactive on the live hero. For print/static exports

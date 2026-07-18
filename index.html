@@ -673,11 +673,16 @@
     'varying vec2 vUv;\n' +
     'void main(){ vUv = position * 0.5 + 0.5; gl_Position = vec4(position, 0.0, 1.0); }';
 
-  /* Pass 1 — smooth interference of a few rotated cosine plane waves: soft, rounded,
-     ring-like blobs, output as alpha (intensity). */
-  var pass1Frag =
+  /* Single-pass halftone: the interference field is computed directly at each
+     dot's cell centre and dithered in one shader — no offscreen framebuffer.
+     The previous two-pass version rendered the field to a non-power-of-two
+     framebuffer texture, which some GPUs/browsers (Safari especially, and only
+     at certain canvas sizes) sample incorrectly — producing swirl/blur/large-
+     circle artifacts. Doing it in one pass removes that failure mode entirely;
+     the result is identical (dots sampled at cell centres, same field, colour). */
+  var fragSrc =
     'precision highp float;\nvarying vec2 vUv;\n' +
-    'uniform vec2 resolution; uniform float time; uniform vec2 mousePos; uniform float mouseRadius; uniform vec3 waveColor;\n' +
+    'uniform vec2 resolution; uniform float time; uniform vec2 mousePos; uniform float mouseRadius; uniform vec3 waveColor; uniform float pixelSize;\n' +
     'float pattern(vec2 p){\n' +
     '  float t = time * 0.06;\n' +
     '  p += 0.16 * vec2(cos(p.y * 1.7 - t * 0.8), sin(p.x * 1.7 + t * 0.6));\n' +
@@ -690,8 +695,8 @@
     '  float n = 0.5 + 0.5 * ((w1 + w2 + w3) / 3.0);\n' +
     '  return smoothstep(0.3, 0.74, n);\n' +
     '}\n' +
-    'void main(){\n' +
-    '  vec2 uv = vUv - 0.5;\n' +
+    'float fieldAt(vec2 sampleUv){\n' +
+    '  vec2 uv = sampleUv - 0.5;\n' +
     '  uv.x *= resolution.x / resolution.y;\n' +
     '  float f = pattern(uv * 2.4);\n' +
     '  vec2 mouseNDC = (mousePos / resolution - 0.5) * vec2(1.0, -1.0);\n' +
@@ -699,15 +704,8 @@
     '  float dist = length(uv - mouseNDC);\n' +
     '  float eff = 1.0 - smoothstep(0.0, mouseRadius, dist);\n' +
     '  f -= 0.65 * eff;\n' +
-    '  f = clamp(f, 0.0, 1.0);\n' +
-    '  gl_FragColor = vec4(waveColor, f);\n' +
-    '}';
-
-  /* Pass 2 — fine ordered (Bayer 8x8) halftone: small round dots, one per grid cell,
-     sampled at the cell center so each dot is a single clean tone (no half-filled squares). */
-  var pass2Frag =
-    'precision highp float;\nvarying vec2 vUv;\n' +
-    'uniform sampler2D uTexture; uniform vec2 resolution; uniform float pixelSize;\n' +
+    '  return clamp(f, 0.0, 1.0);\n' +
+    '}\n' +
     'float bayer8(vec2 p){\n' +
     '  vec2 a = floor(mod(p, 8.0)); float x = a.x; float y = a.y; float i = 0.0;\n' +
     '  i += mod(x,2.0)*32.0; i += mod(y,2.0)*16.0;\n' +
@@ -720,12 +718,11 @@
     '  vec2 cell = floor(gridPos);\n' +
     '  vec2 local = fract(gridPos) - 0.5;\n' +
     '  vec2 cellUv = (cell + 0.5) * pixelSize / resolution;\n' +
-    '  vec4 src = texture2D(uTexture, cellUv);\n' +
-    '  float bright = src.a;\n' +
+    '  float bright = fieldAt(cellUv);\n' +
     '  float on = step(bayer8(cell), bright);\n' +
     '  float d = length(local);\n' +
     '  float dotMask = on * (1.0 - smoothstep(0.29, 0.35, d));\n' +
-    '  gl_FragColor = vec4(src.rgb, dotMask);\n' +
+    '  gl_FragColor = vec4(waveColor, dotMask);\n' +
     '}';
 
   function compile(type, src){
@@ -743,32 +740,25 @@
     return p;
   }
 
-  var prog1 = makeProgram(vertSrc, pass1Frag);
-  var prog2 = makeProgram(vertSrc, pass2Frag);
-  if (!prog1 || !prog2){ fallback2D(); return; }
+  var prog = makeProgram(vertSrc, fragSrc);
+  if (!prog){ fallback2D(); return; }
 
   var quad = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, quad);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
 
-  var loc1 = {
-    position: gl.getAttribLocation(prog1, 'position'),
-    resolution: gl.getUniformLocation(prog1, 'resolution'),
-    time: gl.getUniformLocation(prog1, 'time'),
-    mousePos: gl.getUniformLocation(prog1, 'mousePos'),
-    mouseRadius: gl.getUniformLocation(prog1, 'mouseRadius'),
-    waveColor: gl.getUniformLocation(prog1, 'waveColor')
-  };
-  var loc2 = {
-    position: gl.getAttribLocation(prog2, 'position'),
-    resolution: gl.getUniformLocation(prog2, 'resolution'),
-    pixelSize: gl.getUniformLocation(prog2, 'pixelSize'),
-    uTexture: gl.getUniformLocation(prog2, 'uTexture')
+  var loc = {
+    position: gl.getAttribLocation(prog, 'position'),
+    resolution: gl.getUniformLocation(prog, 'resolution'),
+    time: gl.getUniformLocation(prog, 'time'),
+    mousePos: gl.getUniformLocation(prog, 'mousePos'),
+    mouseRadius: gl.getUniformLocation(prog, 'mouseRadius'),
+    waveColor: gl.getUniformLocation(prog, 'waveColor'),
+    pixelSize: gl.getUniformLocation(prog, 'pixelSize')
   };
 
   var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-  var tex = null, fbo = null, cw = 0, ch = 0;
-
+  var cw = 0, ch = 0;
   function ensureSize(){
     var rect = canvas.getBoundingClientRect();
     var w = Math.max(1, Math.floor(rect.width * dpr));
@@ -778,19 +768,6 @@
     canvas.width = w; canvas.height = h;
     canvas.style.width = rect.width + 'px';
     canvas.style.height = rect.height + 'px';
-    if (tex) gl.deleteTexture(tex);
-    if (fbo) gl.deleteFramebuffer(fbo);
-    tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    fbo = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
   var mouse = [-9999, -9999];
@@ -800,48 +777,29 @@
   });
   canvas.addEventListener('mouseleave', function(){ mouse = [-9999, -9999]; });
 
-  var waveColor = [0.192, 0.569, 0.384]; /* phthalo green, bright tint — same pigment as --accent, thinned for visibility at small dot size */
-
-  function drawQuad(loc){
-    gl.bindBuffer(gl.ARRAY_BUFFER, quad);
-    gl.enableVertexAttribArray(loc.position);
-    gl.vertexAttribPointer(loc.position, 2, gl.FLOAT, false, 0, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-  }
+  var waveColor = [0.192, 0.569, 0.384];
 
   var start = null;
   function frame(now){
     if (start === null) start = now;
     ensureSize();
     var t = (now - start) / 1000;
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-    gl.viewport(0, 0, cw, ch);
-    gl.disable(gl.BLEND);
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.useProgram(prog1);
-    gl.uniform2f(loc1.resolution, cw, ch);
-    gl.uniform1f(loc1.time, t);
-    gl.uniform2f(loc1.mousePos, mouse[0], mouse[1]);
-    gl.uniform1f(loc1.mouseRadius, 0.4);
-    gl.uniform3f(loc1.waveColor, waveColor[0], waveColor[1], waveColor[2]);
-    drawQuad(loc1);
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, cw, ch);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    gl.useProgram(prog2);
-    gl.uniform2f(loc2.resolution, cw, ch);
-    gl.uniform1f(loc2.pixelSize, Math.max(2.5, cw / 700));
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.uniform1i(loc2.uTexture, 0);
-    drawQuad(loc2);
-
+    gl.useProgram(prog);
+    gl.uniform2f(loc.resolution, cw, ch);
+    gl.uniform1f(loc.time, t);
+    gl.uniform2f(loc.mousePos, mouse[0], mouse[1]);
+    gl.uniform1f(loc.mouseRadius, 0.4);
+    gl.uniform3f(loc.waveColor, waveColor[0], waveColor[1], waveColor[2]);
+    gl.uniform1f(loc.pixelSize, Math.max(2.5, cw / 700));
+    gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+    gl.enableVertexAttribArray(loc.position);
+    gl.vertexAttribPointer(loc.position, 2, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
     if (!reduceMotion) requestAnimationFrame(frame);
   }
 
