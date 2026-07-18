@@ -1539,6 +1539,25 @@
      onto the canvas so the download is a true 1:1 of the preview. Rendered at
      1584×396 × scale; all positions are fractions of W/H so any scale is
      pixel-clean. */
+  /* Renders the EXACT dot-formed square mark at a given size and reports its
+     ink bounds — same drawLogoSquare(..., 'dotform') code, so the pattern is
+     guaranteed identical to the "Dot-Formed" mark. */
+  function dotformSquare(S){
+    var sq = document.createElement('canvas');
+    drawLogoSquare(sq, S, 'dotform');
+    var sd = sq.getContext('2d').getImageData(0, 0, S, S).data;
+    var gL = S, gR = 0, gT = S, gB = 0;
+    for (var yy = 0; yy < S; yy++){
+      for (var xx = 0; xx < S; xx++){
+        if (sd[(yy * S + xx) * 4 + 1] > 90){   // green channel well above the bg's
+          if (xx < gL) gL = xx; if (xx > gR) gR = xx;
+          if (yy < gT) gT = yy; if (yy > gB) gB = yy;
+        }
+      }
+    }
+    return { canvas: sq, gL: gL, gR: gR, gT: gT, gB: gB };
+  }
+
   function renderLogoBanner(canvas, scale){
     var W = Math.round(1584 * scale), H = Math.round(396 * scale);
     var ctx = canvas.getContext('2d');
@@ -1546,59 +1565,49 @@
     canvas.style.width = '100%'; canvas.style.height = '100%';
     ctx.fillStyle = LOGO_BG; ctx.fillRect(0, 0, W, H);
 
-    /* The mark is the EXACT dot-formed square mark — rendered by the very same
-       drawLogoSquare(..., 'dotform') code, into an offscreen square, then
-       composited in. (Its background is the same phthalo as this banner, so
-       the square drops in seamlessly.) No re-implementing the dot pattern —
-       this guarantees it's identical to the "Dot-Formed" mark. */
-    var S = Math.round(H * 1.18);
-    var sq = document.createElement('canvas');
-    drawLogoSquare(sq, S, 'dotform');
-    // measure the mark's ink bounds inside the square (bg ~ (18,53,36),
-    // dots are the bright tint — green channel well above the background's).
-    var sd = sq.getContext('2d').getImageData(0, 0, S, S).data;
-    var gL = S, gR = 0, gT = S, gB = 0;
-    for (var yy = 0; yy < S; yy++){
-      for (var xx = 0; xx < S; xx++){
-        if (sd[(yy * S + xx) * 4 + 1] > 90){
-          if (xx < gL) gL = xx; if (xx > gR) gR = xx;
-          if (yy < gT) gT = yy; if (yy > gB) gB = yy;
-        }
-      }
-    }
-    var markW = gR - gL;
-
-    // --- type metrics, so the whole [mark · text] group can be centered ---
-    var nameSize = Math.round(H * 0.20);
-    var tagSize = Math.round(H * 0.052);
+    /* Type: same sizes and same vertical layout as Option A (wordmark at
+       W·0.044, tagline at W·0.0115), so the two banners read as a set. The
+       difference from A is only alignment — here the block is LEFT-aligned and
+       sits to the right of the mark, but its right edge lands at the same
+       W·0.95 margin A right-aligns to, so the text occupies the same place. */
+    var padX = W * 0.05;
+    var nameSize = Math.round(W * 0.044);
+    var tagSize = Math.round(W * 0.0115);
+    var lineGap = W * 0.01;
     var nameFont = '600 ' + nameSize + 'px ' + LOGO_FONT_STACK;
     var tagFont = tagSize + 'px ' + LOGO_FONT_MONO;
-    var tagLS = tagSize * 0.14;
     var nameStr = 'Griffiths, PC';
     var tagStr = 'ENERGY LAW & INFRASTRUCTURE DEVELOPMENT';
-    ctx.font = nameFont;
-    var nameW = ctx.measureText(nameStr).width;
-    ctx.font = tagFont;
-    var tagW = 0;
-    for (var i = 0; i < tagStr.length; i++) tagW += ctx.measureText(tagStr[i]).width + tagLS;
+    ctx.font = nameFont; var nameW = ctx.measureText(nameStr).width;
+    ctx.font = tagFont;  var tagW = ctx.measureText(tagStr).width;
     var textW = Math.max(nameW, tagW);
-    var gap = H * 0.14;
-    var startX = (W - (markW + gap + textW)) / 2;
+    var blockH = nameSize + lineGap + tagSize;
 
-    // composite the mark so its ink-left lands at startX and it's vertically centered
-    ctx.drawImage(sq, Math.round(startX - gL), Math.round(H / 2 - (gT + gB) / 2));
+    /* The mark is sized so its ink height ≈ the title+subtitle block height.
+       Two passes: render at a first guess, measure the actual ink height, then
+       render at the size that hits blockH exactly. */
+    var guessS = Math.round(blockH * 2.4);
+    var m0 = dotformSquare(guessS);
+    var finalS = Math.max(8, Math.round(guessS * blockH / (m0.gB - m0.gT)));
+    var m = dotformSquare(finalS);
+    var markW = m.gR - m.gL;
 
-    // --- wordmark + tagline to the right of the mark ---
-    var textX = startX + markW + gap;
-    var lineGap = H * 0.07;
-    var blockH = nameSize * 0.72 + lineGap + tagSize * 0.72;
-    var top = (H - blockH) / 2;
+    // Right-align the [mark · text] group to the same right margin as A.
+    var markGap = W * 0.02;
+    var textX = W - padX - textW;               // text left edge (left-aligned block)
+    var markInkRight = textX - markGap;
+    var markInkLeft = markInkRight - markW;
+
+    // composite mark: ink-left at markInkLeft, ink vertically centered on H/2
+    ctx.drawImage(m.canvas, Math.round(markInkLeft - m.gL), Math.round(H / 2 - (m.gT + m.gB) / 2));
+
+    // text, left-aligned, vertically laid out exactly like Option A
+    var startY = (H - blockH) / 2;
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     ctx.font = nameFont; ctx.fillStyle = LOGO_PAPER;
-    ctx.fillText(nameStr, textX, top + nameSize * 0.72);
+    ctx.fillText(nameStr, textX, startY + nameSize * 0.82);
     ctx.font = tagFont; ctx.fillStyle = LOGO_TINT;
-    var tx = textX, tagBase = top + nameSize * 0.72 + lineGap + tagSize * 0.72;
-    for (var j = 0; j < tagStr.length; j++){ ctx.fillText(tagStr[j], tx, tagBase); tx += ctx.measureText(tagStr[j]).width + tagLS; }
+    ctx.fillText(tagStr, textX, startY + nameSize + lineGap + tagSize * 0.82);
   }
 
   /* Banner Option B wiring — placed here, after LOGO_* and renderLogoBanner
