@@ -861,9 +861,29 @@
           <div class="li-logo-item-footer">
             <div>
               <div class="li-logo-name">Negative Space</div>
-              <div class="li-logo-desc">The g cut clean out of a dot field</div>
+              <div class="li-logo-desc">The g cut clean out of a solid dot field</div>
             </div>
             <button type="button" class="li-logo-download" data-variant="negative">Download</button>
+          </div>
+        </div>
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogo-negative-halftone" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Negative, Halftone</div>
+              <div class="li-logo-desc">Dot sizes ripple across the field, g cut out</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="negative-halftone">Download</button>
+          </div>
+        </div>
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogo-negative-fade" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Negative, Fade</div>
+              <div class="li-logo-desc">Dots swell toward the g, fade at the edges</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="negative-fade">Download</button>
           </div>
         </div>
         <div class="li-logo-item">
@@ -884,26 +904,6 @@
               <div class="li-logo-desc">Solid green g over faint texture</div>
             </div>
             <button type="button" class="li-logo-download" data-variant="solid">Download</button>
-          </div>
-        </div>
-        <div class="li-logo-item">
-          <div class="li-logo-square"><canvas id="liLogo-textured" aria-hidden="true"></canvas></div>
-          <div class="li-logo-item-footer">
-            <div>
-              <div class="li-logo-name">Textured</div>
-              <div class="li-logo-desc">Dot texture carved into the mark</div>
-            </div>
-            <button type="button" class="li-logo-download" data-variant="textured">Download</button>
-          </div>
-        </div>
-        <div class="li-logo-item">
-          <div class="li-logo-square"><canvas id="liLogo-frame" aria-hidden="true"></canvas></div>
-          <div class="li-logo-item-footer">
-            <div>
-              <div class="li-logo-name">Framed</div>
-              <div class="li-logo-desc">Dots frame the edges, clean center</div>
-            </div>
-            <button type="button" class="li-logo-download" data-variant="frame">Download</button>
           </div>
         </div>
       </div>
@@ -1549,12 +1549,23 @@
       }
     }
     var glyphCenter = (minY + maxY) / 2;
-    var baselineY = probeBaseline + (h * 0.47 - glyphCenter);  // 0.47 = slightly above true center
+    var baselineY = probeBaseline + (h * 0.50 - glyphCenter);  // 0.50 = optically centered
     var maskData = makeMask(baselineY);
     function maskAlphaAt(x, y){
       var mx = Math.max(0, Math.min(w - 1, Math.round(x)));
       var my = Math.max(0, Math.min(h - 1, Math.round(y)));
       return maskData[(my * w + mx) * 4 + 3] / 255;
+    }
+    /* Coverage over a small area (not just the exact center) — a thin stroke
+       like the bottom of the g's bowl often misses every cell center and
+       breaks the letter apart into disconnected dots; sampling the cell's
+       footprint catches those strokes so the mark stays connected. */
+    function maskCoverage(x, y, rad){
+      var hits = 0, n = 0, offs = [-rad, 0, rad];
+      for (var i = 0; i < 3; i++){ for (var j = 0; j < 3; j++){
+        n++; if (maskAlphaAt(x + offs[i], y + offs[j]) >= 0.45) hits++;
+      }}
+      return hits / n;
     }
     function drawGlyph(color){
       ctx.fillStyle = color;
@@ -1565,15 +1576,15 @@
     }
 
     // Mask-based modes need a fine grid to resolve the serif g's thin strokes;
-    // field-texture modes look better a bit coarser.
-    var fineModes = { dotform:1, 'dotform-light':1, negative:1, textured:1 };
-    var density = fineModes[mode] ? 72 : 34;
+    // the dot-formed ones finest of all so the letterform stays connected.
+    var dotformMode = (mode === 'dotform' || mode === 'dotform-light');
+    var fineModes = { negative:1, 'negative-halftone':1, 'negative-fade':1 };
+    var density = dotformMode ? 88 : (fineModes[mode] ? 72 : 34);
     var cell = Math.max(2, w / density);
     var dirX = 8, dirY = 3, freq = 6, phase = 1.3, contrast = 1.7;
 
     // --- glyphs drawn BEFORE the dot layer (dots land on top of them) ---
     if (mode === 'reveal') drawGlyph(LOGO_GREEN);
-    if (mode === 'textured') drawGlyph(LOGO_PAPER);
 
     // --- dot layer ---
     for (var y = 0; y * cell < h; y++){
@@ -1587,10 +1598,14 @@
 
         var color = LOGO_TINT, radius = cell * 0.33, alpha = 1;
 
-        if (mode === 'dotform' || mode === 'dotform-light'){
-          if (!inGlyph) continue;
+        if (dotformMode){
+          /* Include any cell whose footprint touches the glyph (not just its
+             center) so thin strokes at the bottom of the bowl still get dots
+             and connect. Bigger base radius (≥ ~half the cell) makes adjacent
+             dots touch, so the letter reads as continuous strokes. */
+          if (maskCoverage(px, py, cell * 0.5) < 0.34) continue;
           color = (mode === 'dotform-light') ? LOGO_PAPER : LOGO_TINT;
-          radius = cell * (0.30 + v * 0.20);
+          radius = cell * (0.50 + v * 0.14);
         } else if (mode === 'negative'){
           /* Dense, uniform field (no cosine threshold) so the g reads as a
              clean empty cut — a thresholded field has its own gaps and the
@@ -1598,17 +1613,28 @@
              solid rather than sparse. */
           if (inGlyph) continue;
           radius = cell * 0.42;
-        } else if (mode === 'textured'){
-          if (!inGlyph || v <= threshold) continue;
-          color = LOGO_BG;  // carve texture into the solid paper glyph
+        } else if (mode === 'negative-halftone'){
+          /* Same negative-space cut, but the field is a real halftone: a dot
+             in every outside cell, its size rippling with the cosine field —
+             the banner's dithering, wrapped around the g. Dots everywhere
+             (just varying size) keeps the cutout crisp; size variation gives
+             the gradient. */
+          if (inGlyph) continue;
+          radius = cell * (0.16 + v * 0.36);
+          if (radius < cell * 0.05) continue;
+        } else if (mode === 'negative-fade'){
+          /* A different dither on the same idea: dot size swells toward the
+             center (around the g) and fades out to the edges — a soft radial
+             halftone rather than the diagonal ripple above. */
+          if (inGlyph) continue;
+          var fade = 1 - smoothstep(0.30, 1.0, r);
+          radius = cell * (0.12 + v * 0.22 + fade * 0.24);
+          if (radius < cell * 0.05) continue;
         } else if (mode === 'clearing'){
           if (v * smoothstep(0.30, 0.62, r) <= threshold) continue;
         } else if (mode === 'halo'){
           var ring = 1 - Math.min(1, Math.abs(r - 0.46) / 0.24);
           if (v * Math.max(0, ring) <= threshold) continue;
-        } else if (mode === 'frame'){
-          var edge = Math.min(px, w - px, py, h - py) / w;  // 0 at edge → 0.5 at center
-          if (edge > 0.17 || v <= threshold) continue;
         } else if (mode === 'solid'){
           if (v <= threshold) continue;
           alpha = 0.30;  // faint texture behind the solid glyph
@@ -1626,11 +1652,11 @@
     ctx.globalAlpha = 1;
 
     // --- glyphs drawn AFTER the dot layer (sit on top of the dots) ---
-    if (mode === 'ambient' || mode === 'clearing' || mode === 'halo' || mode === 'frame') drawGlyph(LOGO_PAPER);
+    if (mode === 'ambient' || mode === 'clearing' || mode === 'halo') drawGlyph(LOGO_PAPER);
     if (mode === 'solid') drawGlyph(LOGO_GREEN);
   }
 
-  var LI_LOGO_VARIANTS = ['ambient','clearing','halo','dotform','dotform-light','negative','reveal','solid','textured','frame'];
+  var LI_LOGO_VARIANTS = ['ambient','clearing','halo','dotform','dotform-light','negative','negative-halftone','negative-fade','reveal','solid'];
   function renderAllLogoSquares(){
     LI_LOGO_VARIANTS.forEach(function(variant){
       var c = document.getElementById('liLogo-' + variant);
