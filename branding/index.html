@@ -8,8 +8,8 @@
    query params before serving the page, but a hash is resolved entirely
    client-side and never touches the network, so nothing can strip it. */
 (function(){
-  var valid = ['halftone','blueprint','topograph','ledger','aurora'];
-  var m = /concept=([a-z]+)/.exec(location.hash);
+  var valid = ['halftone','blueprint','topograph','ledger','aurora','halftone-dark'];
+  var m = /concept=([a-z-]+)/.exec(location.hash);
   var c = m ? m[1] : null;
   if (valid.indexOf(c) !== -1) document.documentElement.setAttribute('data-concept', c);
 })();
@@ -85,7 +85,7 @@
   :root[data-concept="halftone-dark"]{
     --ink:#E7E9E3; --ink-soft:#9BA69D;
     --paper:#14181B; --paper-deep:#1B2124; --line:#333A38;
-    --accent:#4FB584; --accent-ink:#8FE3B5; --dither-tint:#54D69B;
+    --accent:#54D69B; --accent-ink:#0E1512; --dither-tint:#54D69B;
     --pattern-bg:var(--paper-deep);
   }
   *{ box-sizing:border-box; }
@@ -169,6 +169,13 @@
     color:var(--ink);
     text-shadow:0 2px 16px rgba(0,0,0,0.65), 0 1px 4px rgba(0,0,0,0.85);
   }
+  /* Halftone Dark is dark-on-dark too — same contrast fixes as Aurora. */
+  :root[data-concept="halftone-dark"] .logo-mark circle,
+  :root[data-concept="halftone-dark"] .logo-mark.on-dark circle{ fill:var(--accent); }
+  :root[data-concept="halftone-dark"] .logo-mark text,
+  :root[data-concept="halftone-dark"] .logo-mark.on-dark text{ fill:var(--accent-ink); }
+  :root[data-concept="halftone-dark"] .biz-card .card-top .wordmark{ color:var(--accent); }
+  :root[data-concept="halftone-dark"] .biz-card.back .back-content .wordmark-lg{ color:var(--ink); }
 
   /* ---------- logo section ---------- */
   .logo-grid{ display:flex; flex-wrap:wrap; gap:clamp(2rem,5vw,3rem); align-items:flex-end; margin-bottom:clamp(2.5rem,5vw,3.5rem); }
@@ -925,6 +932,7 @@
     <button type="button" class="cs-opt" data-concept="topograph">03 Topograph</button>
     <button type="button" class="cs-opt" data-concept="ledger">04 Ledger</button>
     <button type="button" class="cs-opt" data-concept="aurora">05 Aurora</button>
+    <button type="button" class="cs-opt" data-concept="halftone-dark">06 Halftone Dark</button>
   </div>
   <a href="#" class="cs-go" id="csGo" target="_blank" rel="noopener">Go &rarr;</a>
 </nav>
@@ -1293,6 +1301,11 @@
       fn: renderGradientShader,
       opts: { colorA:'#0C1613', colorB:'#123524', colorC:'#49CE93', animate:true },
       dark: { colorA:'#081310', colorB:'#123524', colorC:'#49CE93', animate:false }
+    },
+    'halftone-dark': {
+      fn: renderStaticDither,
+      opts: { bg:'#1B2124', dot:'#54D69B', density:160, dirX:8, dirY:3, freq:6, phase:1.2, contrast:1.8 },
+      dark: { bg:'#0E1512', dot:'#2E6B4C', density:70, dirX:8, dirY:3, freq:6, phase:1.4, contrast:1.6 }
     }
   };
 
@@ -1344,6 +1357,14 @@
       n2t: 'How it’s built', n2b: 'A single-pass fragment shader blends three layered cosine fields directly into color — no offscreen texture, no Bayer threshold, no dots. Just smooth interpolation between three tones.',
       n3t: 'Interaction', n3b: 'Animated here via a slowly advancing time uniform; a single frozen frame is used for card/banner exports, per the site’s own print rule.',
       n4t: 'Reuse rules', n4b: 'One hero moment per page; bake a static frame for any print use.'
+    },
+    'halftone-dark': {
+      eyebrow: 'Dithering', title: 'The Halftone Effect — Dark',
+      lede: 'The exact halftone technique from the default concept, inverted onto a near-black-green ground: bright phthalo dots over dark, so the same live two-pass WebGL dither carries a dark register.',
+      n1t: 'Where it’s used', n1b: 'The homepage hero background — the dark-mode counterpart of the light Halftone concept.',
+      n2t: 'How it’s built', n2b: 'Same two passes as Halftone — a cosine interference field to an offscreen texture, then a Bayer 8×8 threshold into round dots — only the palette changes: a brighter tint so the dots read on the dark ground.',
+      n3t: 'Interaction', n3b: 'The pattern clears in a soft radius around the cursor. Move your mouse over the demo above.',
+      n4t: 'Reuse rules', n4b: 'One hero moment per page; bake a single static frame for print, same as the light Halftone.'
     }
   };
   function applyPatternCopy(concept){
@@ -1818,7 +1839,9 @@
     PATTERNS[concept].fn(canvas, PATTERNS[concept].opts);
   }
 
-  if (concept !== 'halftone'){ fallback2D(); return; }
+  // Both Halftone concepts get the real two-pass WebGL effect (only the dot
+  // color differs); every other concept previews its own pattern function.
+  if (concept !== 'halftone' && concept !== 'halftone-dark'){ fallback2D(); return; }
 
   var gl = canvas.getContext('webgl', { alpha:true, premultipliedAlpha:false, antialias:false })
         || canvas.getContext('experimental-webgl', { alpha:true, premultipliedAlpha:false });
@@ -1938,7 +1961,7 @@
   });
   canvas.addEventListener('mouseleave', function(){ mouse = [-9999, -9999]; });
 
-  var waveColor = [0.192, 0.569, 0.384];
+  var waveColor = (concept === 'halftone-dark') ? [0.329, 0.839, 0.608] : [0.192, 0.569, 0.384];
 
   function drawQuad(loc){
     gl.bindBuffer(gl.ARRAY_BUFFER, quad);
