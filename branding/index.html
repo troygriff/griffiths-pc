@@ -251,6 +251,33 @@
   .banner-content .name{ font-family:var(--font-display); font-weight:600; font-size:4.4cqw; color:var(--ink); line-height:1; white-space:nowrap; }
   .banner-content .tagline{ font-family:var(--font-mono); font-size:1.15cqw; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-top:1cqw; white-space:nowrap; }
 
+  /* The actual downloadable asset: full page-width so it's judged at a real
+     size (not squeezed into the small LinkedIn mock below), same design and
+     canvas.width/height (1584×396, via resolveCanvasSize's exportSize path)
+     as the file Download PNG produces — what you see here is exactly what
+     you get, just previewed at 100% width instead of exported to disk. */
+  .banner-export{
+    width:100%; aspect-ratio:1584/396; position:relative; overflow:hidden;
+    border-radius:var(--radius-lg); border:1px solid var(--line);
+    box-shadow:0 12px 30px -20px rgba(20,24,27,0.35);
+    container-type:inline-size; background:var(--pattern-bg);
+  }
+  .banner-export canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .banner-export-row{
+    display:flex; align-items:center; justify-content:space-between; gap:1.5rem;
+    flex-wrap:wrap; margin-top:1rem;
+  }
+  .banner-export-row .banner-caption{ margin-top:0; max-width:46ch; }
+  .banner-download-btn{
+    display:inline-flex; align-items:center; gap:0.5rem; flex:none;
+    appearance:none; border:none; cursor:pointer;
+    font-family:var(--font-mono); font-size:0.78rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--paper); background:var(--accent-ink); padding:0.75rem 1.4rem; border-radius:var(--radius-pill);
+    transition:background .15s ease, transform .15s ease;
+  }
+  .banner-download-btn:hover{ background:var(--accent); transform:translateY(-1px); }
+  .banner-download-btn:active{ transform:translateY(0); }
+
   /* Assembled at real LinkedIn profile-header proportions — banner + overlapping
      avatar + name/headline in LinkedIn's own UI type — so the pairing can be
      judged honestly rather than guessing from a flat banner rectangle alone.
@@ -677,6 +704,22 @@
 
     <div class="app-block">
       <div class="app-label">LinkedIn Banner &mdash; 1584 &times; 396</div>
+      <div class="banner-export">
+        <canvas id="bannerExportCanvas" aria-hidden="true"></canvas>
+        <div class="banner-scrim" aria-hidden="true"></div>
+        <div class="banner-content">
+          <div class="name">Griffiths, PC</div>
+          <div class="tagline">Energy Law &amp; Infrastructure Development</div>
+        </div>
+      </div>
+      <div class="banner-export-row">
+        <p class="banner-caption">Exports fresh at exactly 1584&times;396px &mdash; full resolution, never pixelated, regardless of your screen.</p>
+        <button type="button" class="banner-download-btn" id="downloadBannerBtn">Download PNG</button>
+      </div>
+    </div>
+
+    <div class="app-block">
+      <div class="app-label">Assembled In Context &mdash; LinkedIn Profile Header</div>
       <div class="li-mock">
         <div class="li-mock-banner">
           <canvas id="bannerCanvas" aria-hidden="true"></canvas>
@@ -814,18 +857,36 @@
     [15,47,7,39,13,45,5,37],[63,31,55,23,61,29,53,21]
   ];
 
+  /* Shared canvas-sizing logic for every pattern renderer below: normally
+     reads the canvas's rendered CSS size + devicePixelRatio so the backing
+     store matches what's on screen. opts.exportSize bypasses all of that —
+     used only by the banner PNG download, which needs a guaranteed exact
+     pixel size (1584×396) regardless of the browser's layout or screen
+     density, so the exported file is never soft/pixelated. */
+  function resolveCanvasSize(canvas, opts){
+    if (opts.exportSize){
+      var ew = opts.exportSize.w, eh = opts.exportSize.h;
+      canvas.width = ew; canvas.height = eh;
+      canvas.style.width = ew + 'px'; canvas.style.height = eh + 'px';
+      return { w: ew, h: eh };
+    }
+    var rect = canvas.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = Math.max(1, Math.round(rect.width * dpr));
+    var h = Math.max(1, Math.round(rect.height * dpr));
+    canvas.width = w; canvas.height = h;
+    canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+    return { w: w, h: h };
+  }
+
   /* Static (single-frame) dither renderer for print-oriented mockups: a business
      card back and a LinkedIn banner. No animation — these represent exportable
      static assets, matching how those surfaces actually work in the real world. */
   function renderStaticDither(canvas, opts){
     var ctx = canvas.getContext('2d');
     function draw(){
-      var rect = canvas.getBoundingClientRect();
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var w = Math.max(1, Math.round(rect.width * dpr));
-      var h = Math.max(1, Math.round(rect.height * dpr));
-      canvas.width = w; canvas.height = h;
-      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      var size = resolveCanvasSize(canvas, opts);
+      var w = size.w, h = size.h;
       ctx.fillStyle = opts.bg; ctx.fillRect(0, 0, w, h);
       ctx.fillStyle = opts.dot;
       var cell = Math.max(2.5, w / opts.density);
@@ -858,12 +919,8 @@
   function renderGridPattern(canvas, opts){
     var ctx = canvas.getContext('2d');
     function draw(){
-      var rect = canvas.getBoundingClientRect();
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var w = Math.max(1, Math.round(rect.width * dpr));
-      var h = Math.max(1, Math.round(rect.height * dpr));
-      canvas.width = w; canvas.height = h;
-      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      var size = resolveCanvasSize(canvas, opts);
+      var w = size.w, h = size.h;
       ctx.fillStyle = opts.bg; ctx.fillRect(0, 0, w, h);
 
       var minor = Math.max(6, w / (opts.density || 90));
@@ -902,12 +959,8 @@
     var ctx = canvas.getContext('2d');
     var peaks = opts.peaks || [{ x:0.22, y:0.32 }, { x:0.82, y:0.68 }];
     function draw(){
-      var rect = canvas.getBoundingClientRect();
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var w = Math.max(1, Math.round(rect.width * dpr));
-      var h = Math.max(1, Math.round(rect.height * dpr));
-      canvas.width = w; canvas.height = h;
-      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      var size = resolveCanvasSize(canvas, opts);
+      var w = size.w, h = size.h;
       ctx.fillStyle = opts.bg; ctx.fillRect(0, 0, w, h);
 
       var spacing = Math.max(14, w / (opts.density || 40));
@@ -950,12 +1003,8 @@
       return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
     }
     function draw(){
-      var rect = canvas.getBoundingClientRect();
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var w = Math.max(1, Math.round(rect.width * dpr));
-      var h = Math.max(1, Math.round(rect.height * dpr));
-      canvas.width = w; canvas.height = h;
-      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      var size = resolveCanvasSize(canvas, opts);
+      var w = size.w, h = size.h;
       ctx.fillStyle = opts.bg; ctx.fillRect(0, 0, w, h);
 
       var dotRGB = hexToRgb(opts.dot);
@@ -984,12 +1033,8 @@
   function renderGradientShader(canvas, opts){
     function fallback(){
       var ctx = canvas.getContext('2d');
-      var rect = canvas.getBoundingClientRect();
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var w = Math.max(1, Math.round(rect.width * dpr));
-      var h = Math.max(1, Math.round(rect.height * dpr));
-      canvas.width = w; canvas.height = h;
-      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      var size = resolveCanvasSize(canvas, opts);
+      var w = size.w, h = size.h;
       ctx.fillStyle = opts.colorA; ctx.fillRect(0, 0, w, h);
       var g1 = ctx.createRadialGradient(w * 0.25, h * 0.35, 0, w * 0.25, h * 0.35, Math.max(w, h) * 0.7);
       g1.addColorStop(0, opts.colorC); g1.addColorStop(1, 'transparent');
@@ -1066,12 +1111,8 @@
     var cA = hexToVec3(opts.colorA), cB = hexToVec3(opts.colorB), cC = hexToVec3(opts.colorC);
 
     function drawFrame(time){
-      var rect = canvas.getBoundingClientRect();
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var w = Math.max(1, Math.round(rect.width * dpr));
-      var h = Math.max(1, Math.round(rect.height * dpr));
-      canvas.width = w; canvas.height = h;
-      canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+      var size = resolveCanvasSize(canvas, opts);
+      var w = size.w, h = size.h;
       gl.viewport(0, 0, w, h);
       gl.uniform2f(uRes, w, h);
       gl.uniform1f(uTime, time);
@@ -1199,7 +1240,79 @@
   if (liBodyEl) new ResizeObserver(syncBannerHeight).observe(liBodyEl);
 
   var banner = document.getElementById('bannerCanvas');
+  var bannerExport = document.getElementById('bannerExportCanvas');
   if (banner) activePattern.fn(banner, Object.assign({}, activePattern.opts, { animate:false }));
+  if (bannerExport) activePattern.fn(bannerExport, Object.assign({}, activePattern.opts, { animate:false }));
+
+  /* PNG download: rebuilds the banner from scratch at guaranteed-exact
+     1584×396 (via exportSize, see resolveCanvasSize) rather than reading
+     back the on-page preview canvas — the preview's actual backing-store
+     resolution depends on the viewer's screen width and devicePixelRatio, so
+     grabbing it directly could hand someone a blurry or oddly-sized file.
+     Building fresh guarantees the exported asset always matches the label. */
+  function hexToRgbCss(hex){
+    var n = parseInt(hex.replace('#', ''), 16);
+    return ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255);
+  }
+  function downloadBannerPNG(){
+    var W = 1584, H = 396;
+    var patternCanvas = document.createElement('canvas');
+    var opts = Object.assign({}, activePattern.opts, { animate:false, exportSize:{ w:W, h:H } });
+    activePattern.fn(patternCanvas, opts);
+
+    var out = document.createElement('canvas');
+    out.width = W; out.height = H;
+    var ctx = out.getContext('2d');
+    ctx.drawImage(patternCanvas, 0, 0, W, H);
+
+    var cs = getComputedStyle(document.documentElement);
+    var bgRgb = hexToRgbCss(cs.getPropertyValue('--paper-deep').trim());
+    var inkHex = cs.getPropertyValue('--ink').trim();
+    var accentHex = cs.getPropertyValue('--accent').trim();
+    var fontDisplay = cs.getPropertyValue('--font-display').trim() || 'serif';
+    var fontMono = cs.getPropertyValue('--font-mono').trim() || 'monospace';
+
+    // scrim: right-to-left fade, matching .banner-scrim's 270deg CSS gradient
+    var grad = ctx.createLinearGradient(W, 0, 0, 0);
+    grad.addColorStop(0.00, 'rgba(' + bgRgb + ',0.92)');
+    grad.addColorStop(0.45, 'rgba(' + bgRgb + ',0.75)');
+    grad.addColorStop(0.78, 'rgba(' + bgRgb + ',0.15)');
+    grad.addColorStop(1.00, 'rgba(' + bgRgb + ',0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // name + tagline, right-aligned, vertically centered as a block — mirrors
+    // .banner-content's flex column + justify-content:center layout
+    var padX = W * 0.05;
+    var nameSize = Math.round(W * 0.044);
+    var tagSize = Math.round(W * 0.0115);
+    var gap = W * 0.01;
+    var blockH = nameSize + gap + tagSize;
+    var startY = (H - blockH) / 2;
+
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = '600 ' + nameSize + 'px ' + fontDisplay;
+    ctx.fillStyle = inkHex;
+    ctx.fillText('Griffiths, PC', W - padX, startY + nameSize * 0.82);
+
+    ctx.font = tagSize + 'px ' + fontMono;
+    ctx.fillStyle = accentHex;
+    ctx.fillText('ENERGY LAW & INFRASTRUCTURE DEVELOPMENT', W - padX, startY + nameSize + gap + tagSize * 0.82);
+
+    out.toBlob(function(blob){
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'griffiths-pc-linkedin-banner-' + currentConcept + '.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    }, 'image/png');
+  }
+  var downloadBtn = document.getElementById('downloadBannerBtn');
+  if (downloadBtn) downloadBtn.addEventListener('click', downloadBannerPNG);
 
   /* Live animated demo. Halftone gets the actual two-pass WebGL technique from
      the homepage hero (at a smaller scale); every other concept previews its
@@ -1398,6 +1511,7 @@
     applyPatternCopy(name);
     if (cardBack) activePattern.fn(cardBack, activePattern.dark);
     if (banner) activePattern.fn(banner, Object.assign({}, activePattern.opts, { animate:false }));
+    if (bannerExport) activePattern.fn(bannerExport, Object.assign({}, activePattern.opts, { animate:false }));
     syncBannerHeight();
 
     var oldDemo = document.getElementById('ditherDemoCanvas');
