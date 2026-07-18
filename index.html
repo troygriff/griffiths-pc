@@ -1,5 +1,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Griffiths, PC — Energy Law &amp; Infrastructure Development</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23123524'/%3E%3Ctext x='50' y='61' font-family='Georgia, serif' font-size='60' font-weight='600' text-anchor='middle' fill='%23E7E9E3'%3Eg%3C/text%3E%3C/svg%3E">
 <script>
 /* Runs before the stylesheet paints, so a #concept= link from the /branding
    switcher lands on the right theme with no flash of the default site. Absent
@@ -206,10 +207,25 @@
     position:relative;
     padding:0;
     min-height:clamp(620px, calc(100vh - 4.25rem), 920px);
+    /* dvh accounts for mobile browser chrome (address bar, etc.) — 100vh on
+       iOS Safari uses the height as if the chrome were hidden, so on first
+       load (chrome visible) a 100vh-tall hero extends below the actually-
+       visible viewport. Content is vertically centered *within the hero
+       box*, so if part of that box is off-screen, the centered content
+       visually sits low relative to what's actually visible. dvh fixes the
+       mismatch at the source; only redeclared where supported. */
+    min-height:clamp(620px, calc(100dvh - 4.25rem), 920px);
     display:flex; align-items:center;
     overflow:hidden;
     background:var(--hero-bg);
     isolation:isolate;
+  }
+  @media (max-width:640px){
+    /* On top of the dvh fix, cap the mobile hero shorter than "nearly full
+       screen" — less dead space above/below the centered content, so it
+       reads as immediately present rather than centered-but-lost in a
+       too-tall box. */
+    .hero{ min-height:min(620px, calc(100dvh - 4.25rem)); }
   }
   .hero canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
   .hero-scrim{
@@ -249,6 +265,12 @@
     transition:background .2s ease, transform .2s ease;
   }
   .pill-btn:hover{ background:var(--accent); transform:translateY(-1px); }
+  .text-link-light{
+    font-family:var(--font-mono); font-size:0.78rem; letter-spacing:0.09em; text-transform:uppercase;
+    color:color-mix(in srgb, var(--ink) 70%, transparent); border-bottom:1px solid color-mix(in srgb, var(--ink) 32%, transparent); padding-bottom:0.3rem;
+    transition:color .2s ease, border-color .2s ease;
+  }
+  .text-link-light:hover{ color:var(--accent); border-color:var(--accent); }
 
   /* ---------- generic section ---------- */
   section{ padding-block:clamp(4rem, 9vw, 7rem); border-bottom:1px solid var(--rule); }
@@ -430,6 +452,7 @@
       <p class="hero-lede">Expert insight for an evolving grid.</p>
       <div class="hero-cta-row">
         <a class="pill-btn" href="#practice-areas">View practice areas</a>
+        <a class="text-link-light" href="#contact">Contact us</a>
       </div>
     </div>
   </section>
