@@ -1070,7 +1070,7 @@
   };
 
   var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-  var tex = null, fbo = null, cw = 0, ch = 0;
+  var tex = null, fbo = null, cw = 0, ch = 0, fboComplete = true;
 
   function ensureSize(){
     var rect = canvas.getBoundingClientRect();
@@ -1093,6 +1093,7 @@
     fbo = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    fboComplete = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
@@ -1150,6 +1151,17 @@
   }
 
   ensureSize();
+  /* On some GPUs/browsers the offscreen framebuffer can't be completed; the
+     two-pass would then leak pass 1 (the smooth field) onto the screen as
+     blurry "clouds" behind the dots. If that's the case, swap in a fresh
+     canvas and draw the crisp static ordered-dither instead — never the
+     broken two-pass. Devices where it's complete are unaffected. */
+  if (!fboComplete){
+    var freshCanvas = canvas.cloneNode(false);
+    canvas.replaceWith(freshCanvas);
+    fallback2D(freshCanvas);
+    return;
+  }
   requestAnimationFrame(frame);
   new ResizeObserver(function(){ if (reduceMotion) requestAnimationFrame(frame); }).observe(canvas);
   }
