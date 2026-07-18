@@ -792,8 +792,8 @@
     </div>
 
     <div class="app-block">
-      <div class="app-label">LinkedIn Company Logo &mdash; Square, 400&times;400</div>
-      <p class="banner-caption" style="margin-bottom:1.5rem;">The small square icon LinkedIn shows next to a job title &mdash; on a profile&rsquo;s experience section, in search results, anywhere the firm is referenced but there&rsquo;s no room for a wordmark. Four takes on blending the halftone technique into the mark itself, all built to stay legible at the tiny size LinkedIn actually displays it.</p>
+      <div class="app-label">Company Logo &mdash; Square, 400&times;400</div>
+      <p class="banner-caption" style="margin-bottom:1.5rem;">The small square icon shown next to a job title &mdash; on a LinkedIn experience section, in search results, anywhere the firm is referenced but there&rsquo;s no room for a wordmark. Ten takes on blending the halftone technique into the &ldquo;g&rdquo; mark itself, all built to stay legible at the tiny size it&rsquo;s actually displayed. Pick whichever reads best; every one downloads at your chosen resolution.</p>
 
       <div class="li-logo-scale-row">
         <span class="li-logo-scale-label">Export size</span>
@@ -801,32 +801,33 @@
           <button type="button" class="banner-scale-opt li-logo-scale-opt" data-scale="1" aria-pressed="true">1x &middot; 400px</button>
           <button type="button" class="banner-scale-opt li-logo-scale-opt" data-scale="1.5" aria-pressed="false">1.5x &middot; 600px</button>
           <button type="button" class="banner-scale-opt li-logo-scale-opt" data-scale="2" aria-pressed="false">2x &middot; 800px</button>
+          <button type="button" class="banner-scale-opt li-logo-scale-opt" data-scale="4" aria-pressed="false">4x &middot; 1600px</button>
         </div>
       </div>
 
       <div class="li-logo-grid">
         <div class="li-logo-item">
-          <div class="li-logo-square"><canvas id="liLogoAmbient" aria-hidden="true"></canvas></div>
+          <div class="li-logo-square"><canvas id="liLogo-ambient" aria-hidden="true"></canvas></div>
           <div class="li-logo-item-footer">
             <div>
               <div class="li-logo-name">Ambient Grain</div>
-              <div class="li-logo-desc">Fine texture throughout, g stays flat &amp; solid</div>
+              <div class="li-logo-desc">Even texture, solid mark on top</div>
             </div>
             <button type="button" class="li-logo-download" data-variant="ambient">Download</button>
           </div>
         </div>
         <div class="li-logo-item">
-          <div class="li-logo-square"><canvas id="liLogoClear" aria-hidden="true"></canvas></div>
+          <div class="li-logo-square"><canvas id="liLogo-clearing" aria-hidden="true"></canvas></div>
           <div class="li-logo-item-footer">
             <div>
               <div class="li-logo-name">Clearing</div>
               <div class="li-logo-desc">Dots resolve outward from a clear center</div>
             </div>
-            <button type="button" class="li-logo-download" data-variant="clear">Download</button>
+            <button type="button" class="li-logo-download" data-variant="clearing">Download</button>
           </div>
         </div>
         <div class="li-logo-item">
-          <div class="li-logo-square"><canvas id="liLogoHalo" aria-hidden="true"></canvas></div>
+          <div class="li-logo-square"><canvas id="liLogo-halo" aria-hidden="true"></canvas></div>
           <div class="li-logo-item-footer">
             <div>
               <div class="li-logo-name">Halo Ring</div>
@@ -836,13 +837,73 @@
           </div>
         </div>
         <div class="li-logo-item">
-          <div class="li-logo-square"><canvas id="liLogoDotform" aria-hidden="true"></canvas></div>
+          <div class="li-logo-square"><canvas id="liLogo-dotform" aria-hidden="true"></canvas></div>
           <div class="li-logo-item-footer">
             <div>
               <div class="li-logo-name">Dot-Formed</div>
-              <div class="li-logo-desc">The g itself is built from the pattern</div>
+              <div class="li-logo-desc">The g built from tint dots</div>
             </div>
             <button type="button" class="li-logo-download" data-variant="dotform">Download</button>
+          </div>
+        </div>
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogo-dotform-light" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Dot-Formed, Light</div>
+              <div class="li-logo-desc">Same, in paper white for more contrast</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="dotform-light">Download</button>
+          </div>
+        </div>
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogo-negative" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Negative Space</div>
+              <div class="li-logo-desc">The g cut clean out of a dot field</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="negative">Download</button>
+          </div>
+        </div>
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogo-reveal" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Reveal</div>
+              <div class="li-logo-desc">Green g showing through the dot field</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="reveal">Download</button>
+          </div>
+        </div>
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogo-solid" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Solid Mark</div>
+              <div class="li-logo-desc">Solid green g over faint texture</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="solid">Download</button>
+          </div>
+        </div>
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogo-textured" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Textured</div>
+              <div class="li-logo-desc">Dot texture carved into the mark</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="textured">Download</button>
+          </div>
+        </div>
+        <div class="li-logo-item">
+          <div class="li-logo-square"><canvas id="liLogo-frame" aria-hidden="true"></canvas></div>
+          <div class="li-logo-item-footer">
+            <div>
+              <div class="li-logo-name">Framed</div>
+              <div class="li-logo-desc">Dots frame the edges, clean center</div>
+            </div>
+            <button type="button" class="li-logo-download" data-variant="frame">Download</button>
           </div>
         </div>
       </div>
@@ -1441,107 +1502,138 @@
      current concept's tokens, so it doesn't look jarringly out of place
      while previewing e.g. Aurora or Ledger. Static single frame, same
      reasoning as every other print/download asset on this page. */
+  /* Fixed colors, not concept tokens — this is the site's one real shipped
+     brand, and concept tokens aren't safe here (Aurora's --paper is dark;
+     Ledger's tint equals its bg — either would render an invisible glyph). */
+  var LOGO_BG = '#123524';     // phthalo mass-tone
+  var LOGO_TINT = '#319162';   // bright dither tint
+  var LOGO_PAPER = '#E7E9E3';  // near-white
+  var LOGO_GREEN = '#43B87C';  // a lighter green than the tint, for a solid glyph that still reads as "green" on the dark bg
+  var LOGO_FONT_STACK = 'ui-serif, "New York", "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif';
+
   function drawLogoSquare(canvas, size, mode){
     var ctx = canvas.getContext('2d');
     canvas.width = size; canvas.height = size;
     canvas.style.width = '100%'; canvas.style.height = '100%';
 
-    /* Deliberately fixed, not read from the active concept's CSS tokens —
-       this represents the site's one real, shipped brand, not the concept-
-       comparison experiment, and concept tokens aren't safe here anyway:
-       Aurora's --paper is dark (it's a dark theme), and Ledger's
-       --dither-tint equals its --accent-ink, so either would silently
-       render an invisible glyph or invisible dots depending on concept. */
-    var bgHex = '#123524';
-    var dotHex = '#319162';
-    var glyphHex = '#E7E9E3';
-    var fontDisplay = 'ui-serif, "New York", "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif';
-
-    ctx.fillStyle = bgHex;
+    ctx.fillStyle = LOGO_BG;
     ctx.fillRect(0, 0, size, size);
 
     var w = size, h = size, cx = w / 2, cy = h / 2, maxR = w / 2;
-    /* Dot-formed needs a much finer grid than the other three modes — at the
-       same density used for ambient texture (34), the sample grid is too
-       coarse to resolve this serif g's thin bowl strokes and just reads as
-       noise. 70 is fine enough to keep the letterform legible while still
-       looking like discrete dots up close, not a blurred photo. */
-    var density = (mode === 'dotform') ? 70 : 34;
-    var cell = Math.max(2, w / density);
-    var dirX = 8, dirY = 3, freq = 6, phase = 1.3, contrast = 1.7;
-    var dotRgb = hexToRgbCss(dotHex);
-
     function smoothstep(a, b, x){ var t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
 
-    var glyphSize = Math.round(h * 0.62);
-    var maskData = null;
-    if (mode === 'dotform'){
-      var maskCanvas = document.createElement('canvas');
-      maskCanvas.width = w; maskCanvas.height = h;
-      var mctx = maskCanvas.getContext('2d');
-      mctx.fillStyle = '#fff';
-      mctx.font = '600 ' + glyphSize + 'px ' + fontDisplay;
-      mctx.textAlign = 'center';
-      mctx.textBaseline = 'alphabetic';
-      mctx.fillText('g', w / 2, h * 0.655);
-      maskData = mctx.getImageData(0, 0, w, h).data;
+    var glyphSize = Math.round(h * 0.60);
+    var glyphFont = '600 ' + glyphSize + 'px ' + LOGO_FONT_STACK;
+
+    /* Center the g by its measured ink bounds (including the descender), not
+       the font baseline — then nudge it up. Two payoffs: (1) it sits
+       optically centered / slightly high as asked, and (2) fitting to real
+       measured bounds guarantees the whole glyph is inside the square at any
+       export size, so the descender is never clipped on download. Everything
+       scales proportionally with `size`, so a 2x export is pixel-identical to
+       the on-page preview, just larger. */
+    function makeMask(baselineY){
+      var m = document.createElement('canvas'); m.width = w; m.height = h;
+      var mc = m.getContext('2d');
+      mc.fillStyle = '#fff'; mc.font = glyphFont; mc.textAlign = 'center'; mc.textBaseline = 'alphabetic';
+      mc.fillText('g', w / 2, baselineY);
+      return mc.getImageData(0, 0, w, h).data;
     }
+    var probeBaseline = h * 0.62;
+    var probe = makeMask(probeBaseline);
+    var minY = h, maxY = 0;
+    for (var yi = 0; yi < h; yi++){
+      var rowoff = yi * w * 4;
+      for (var xi = 0; xi < w; xi++){
+        if (probe[rowoff + xi * 4 + 3] > 20){ if (yi < minY) minY = yi; if (yi > maxY) maxY = yi; break; }
+      }
+    }
+    var glyphCenter = (minY + maxY) / 2;
+    var baselineY = probeBaseline + (h * 0.47 - glyphCenter);  // 0.47 = slightly above true center
+    var maskData = makeMask(baselineY);
     function maskAlphaAt(x, y){
-      var xi = Math.max(0, Math.min(w - 1, Math.round(x)));
-      var yi = Math.max(0, Math.min(h - 1, Math.round(y)));
-      return maskData[(yi * w + xi) * 4 + 3] / 255;
+      var mx = Math.max(0, Math.min(w - 1, Math.round(x)));
+      var my = Math.max(0, Math.min(h - 1, Math.round(y)));
+      return maskData[(my * w + mx) * 4 + 3] / 255;
+    }
+    function drawGlyph(color){
+      ctx.fillStyle = color;
+      ctx.font = glyphFont;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('g', w / 2, baselineY);
     }
 
-    ctx.fillStyle = 'rgb(' + dotRgb + ')';
+    // Mask-based modes need a fine grid to resolve the serif g's thin strokes;
+    // field-texture modes look better a bit coarser.
+    var fineModes = { dotform:1, 'dotform-light':1, negative:1, textured:1 };
+    var density = fineModes[mode] ? 72 : 34;
+    var cell = Math.max(2, w / density);
+    var dirX = 8, dirY = 3, freq = 6, phase = 1.3, contrast = 1.7;
+
+    // --- glyphs drawn BEFORE the dot layer (dots land on top of them) ---
+    if (mode === 'reveal') drawGlyph(LOGO_GREEN);
+    if (mode === 'textured') drawGlyph(LOGO_PAPER);
+
+    // --- dot layer ---
     for (var y = 0; y * cell < h; y++){
       for (var x = 0; x * cell < w; x++){
         var px = x * cell + cell / 2, py = y * cell + cell / 2;
         var nx = px / w - 0.5, ny = py / h - 0.5;
-        var v = 0.5 + 0.5 * Math.cos((nx * dirX + ny * dirY) * freq + phase);
-        v = Math.pow(v, contrast);
+        var v = Math.pow(0.5 + 0.5 * Math.cos((nx * dirX + ny * dirY) * freq + phase), contrast);
         var threshold = BAYER[y % 8][x % 8] / 64;
-        var radius;
+        var r = Math.hypot(px - cx, py - cy) / maxR;
+        var inGlyph = maskAlphaAt(px, py) >= 0.45;
 
-        if (mode === 'dotform'){
-          if (maskAlphaAt(px, py) < 0.45) continue;
+        var color = LOGO_TINT, radius = cell * 0.33, alpha = 1;
+
+        if (mode === 'dotform' || mode === 'dotform-light'){
+          if (!inGlyph) continue;
+          color = (mode === 'dotform-light') ? LOGO_PAPER : LOGO_TINT;
           radius = cell * (0.30 + v * 0.20);
-        } else {
-          var r = Math.hypot(px - cx, py - cy) / maxR;
-          var finalV;
-          if (mode === 'clear'){
-            finalV = v * smoothstep(0.30, 0.62, r);
-          } else if (mode === 'halo'){
-            var ring = 1 - Math.min(1, Math.abs(r - 0.46) / 0.24);
-            finalV = v * Math.max(0, ring);
-          } else {
-            finalV = v;
-          }
-          if (finalV <= threshold) continue;
-          radius = cell * 0.33;
+        } else if (mode === 'negative'){
+          /* Dense, uniform field (no cosine threshold) so the g reads as a
+             clean empty cut — a thresholded field has its own gaps and the
+             cutout gets lost in them. Slightly larger dots so the fill feels
+             solid rather than sparse. */
+          if (inGlyph) continue;
+          radius = cell * 0.42;
+        } else if (mode === 'textured'){
+          if (!inGlyph || v <= threshold) continue;
+          color = LOGO_BG;  // carve texture into the solid paper glyph
+        } else if (mode === 'clearing'){
+          if (v * smoothstep(0.30, 0.62, r) <= threshold) continue;
+        } else if (mode === 'halo'){
+          var ring = 1 - Math.min(1, Math.abs(r - 0.46) / 0.24);
+          if (v * Math.max(0, ring) <= threshold) continue;
+        } else if (mode === 'frame'){
+          var edge = Math.min(px, w - px, py, h - py) / w;  // 0 at edge → 0.5 at center
+          if (edge > 0.17 || v <= threshold) continue;
+        } else if (mode === 'solid'){
+          if (v <= threshold) continue;
+          alpha = 0.30;  // faint texture behind the solid glyph
+        } else { // ambient, reveal
+          if (v <= threshold) continue;
         }
 
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
         ctx.beginPath();
         ctx.arc(px, py, radius, 0, Math.PI * 2);
         ctx.fill();
       }
     }
+    ctx.globalAlpha = 1;
 
-    // Solid flat g on top for ambient/clear/halo — legibility never depends
-    // on the dot layer underneath. Dotform skips this: the dots ARE the g.
-    if (mode !== 'dotform'){
-      ctx.fillStyle = glyphHex;
-      ctx.font = '600 ' + glyphSize + 'px ' + fontDisplay;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText('g', w / 2, h * 0.655);
-    }
+    // --- glyphs drawn AFTER the dot layer (sit on top of the dots) ---
+    if (mode === 'ambient' || mode === 'clearing' || mode === 'halo' || mode === 'frame') drawGlyph(LOGO_PAPER);
+    if (mode === 'solid') drawGlyph(LOGO_GREEN);
   }
 
-  var LI_LOGO_VARIANTS = ['ambient', 'clear', 'halo', 'dotform'];
-  var LI_LOGO_CANVAS_IDS = { ambient:'liLogoAmbient', clear:'liLogoClear', halo:'liLogoHalo', dotform:'liLogoDotform' };
+  var LI_LOGO_VARIANTS = ['ambient','clearing','halo','dotform','dotform-light','negative','reveal','solid','textured','frame'];
   function renderAllLogoSquares(){
     LI_LOGO_VARIANTS.forEach(function(variant){
-      var c = document.getElementById(LI_LOGO_CANVAS_IDS[variant]);
+      var c = document.getElementById('liLogo-' + variant);
       if (c) drawLogoSquare(c, 400, variant);
     });
   }
